@@ -2,6 +2,7 @@
 
 ## MCP v2 implementation update — 2026-08-10
 
+- Implementation checkpoint: commit `f9820c1` on branch `codex/resume-infrastructure`. The branch is local and has not been pushed.
 - The stable split MCP SDK was upgraded to `@modelcontextprotocol/server` and `@modelcontextprotocol/client` 2.0.0. Local stdio remains compatible, and a modern-only MCP 2026-07-28 HTTP entry now performs `server/discover` negotiation.
 - Remote request authentication now uses RS256/JWKS verification, the Auth0 RFC 9068 `at+jwt` profile, exact issuer and full-resource audience, a namespaced tenant claim, a 15-minute maximum lifetime, request-scoped principals, and an atomically managed local `jti` revocation file. OAuth protected-resource metadata, authorization-server metadata, rate/body/concurrency controls, private health/readiness/metrics, systemd, and Caddy examples are included.
 - `pnpm test:mcp` passes 9/9, including a real modern client negotiation and authenticated tool call. `pnpm test` passes all 115 requirements, PHP 40/40, and MCP 9/9. `MCP-003` remains `in_progress` until the Auth0 tenant, TLS/proxy/firewall, observability, and Codex/MCP Inspector/official TypeScript client checks pass on deployed infrastructure.
