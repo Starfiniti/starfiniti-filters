@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { MemoryAuditSink } from '../src/audit.js';
 import { SearchControlClient, type CredentialResolver } from '../src/control-client.js';
 import { validateVerifiedClaims, type TokenValidationPolicy } from '../src/security.js';

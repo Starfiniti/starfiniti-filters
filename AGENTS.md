@@ -78,7 +78,7 @@ Then run `pnpm verify:requirements`. Do not mark externally dependent work compl
 
 Start every server session with read-only inventory. Identify the host, OS, existing workloads, firewall, reverse proxy, container runtime, backups, DNS provider, and reserved IP before modifying anything. Do not delete, replace, or expose existing services without explicit confirmation of the target.
 
-The current MCP application supports trusted local stdio only. Do not expose it directly to the Internet. Remote deployment remains incomplete until Streamable HTTP, TLS, OAuth protected-resource metadata, authorization-server discovery, PKCE where applicable, cryptographic JWT/JWKS verification, exact issuer/audience validation, short token lifetimes, revocation, tenant binding, separate health/readiness, and deployment observability are implemented and tested. Caller tokens must never be forwarded to WordPress.
+The MCP application supports trusted local stdio and a modern-only Streamable HTTP resource-server implementation. Do not expose either directly to the Internet. Remote deployment remains incomplete until the implemented HTTP/JWT boundary is certified with the real Auth0 tenant, TLS proxy, firewall, private health/readiness/metrics routing, observability, key rotation, failure cases, and named MCP clients. Caller tokens must never be forwarded to WordPress.
 
 Keep Typesense on a private network. Never publish its admin API or admin key. Pin the tested server image by digest, separate search/index/provisioning/relevance credentials, test snapshots and restore, and run the real-service conformance and outage suites before enabling the provider.
 

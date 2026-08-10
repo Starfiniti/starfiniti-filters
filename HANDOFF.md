@@ -1,5 +1,14 @@
 # Starfiniti Search continuation handoff
 
+## MCP v2 implementation update — 2026-08-10
+
+- The stable split MCP SDK was upgraded to `@modelcontextprotocol/server` and `@modelcontextprotocol/client` 2.0.0. Local stdio remains compatible, and a modern-only MCP 2026-07-28 HTTP entry now performs `server/discover` negotiation.
+- Remote request authentication now uses RS256/JWKS verification, the Auth0 RFC 9068 `at+jwt` profile, exact issuer and full-resource audience, a namespaced tenant claim, a 15-minute maximum lifetime, request-scoped principals, and an atomically managed local `jti` revocation file. OAuth protected-resource metadata, authorization-server metadata, rate/body/concurrency controls, private health/readiness/metrics, systemd, and Caddy examples are included.
+- `pnpm test:mcp` passes 9/9, including a real modern client negotiation and authenticated tool call. `pnpm test` passes all 115 requirements, PHP 40/40, and MCP 9/9. `MCP-003` remains `in_progress` until the Auth0 tenant, TLS/proxy/firewall, observability, and Codex/MCP Inspector/official TypeScript client checks pass on deployed infrastructure.
+- `pnpm test:all` passed in 108.1 seconds; `pnpm test:mcp:live` passed and an independent inventory found zero temporary qualification passwords; `pnpm audit --prod --audit-level high` found no known vulnerabilities; `pnpm qualify:artifact` passed in 89 seconds with the unchanged 74-file plugin tree and exact published ZIP/SBOM/manifest hashes.
+- Proxmox provisioning was not attempted: `s2` had only 19 GiB available, below the safe margin for the approved 16 GiB VM plus 4 GiB observability container. No unrelated workload was stopped or resized. Restore capacity first, then resume VM/LXC provisioning.
+- No DNS, Caddy, firewall, Auth0, VM, container, or backup configuration has been mutated in this continuation.
+
 Snapshot date: 2026-08-10 (Europe/Ljubljana)
 
 ## Continuation update — 2026-08-10
@@ -153,8 +162,8 @@ The Windows localhost runtime lives under `%LOCALAPPDATA%\StarfinitiSearch\starf
 - Versioned Typesense collection creation, per-document import results, and verified alias activation/rollback
 - Typesense v30 locale/channel-scoped synonym-set and curation-set reconciliation with deterministic resource IDs, drift repair, read-after-write verification, preservation of unrelated external resources, dynamic query-time selection, explicit application-only actions, and fail-closed incompatible-major behavior
 - Canonical document IDs bound to Typesense document IDs for deterministic curation
-- Official MCP SDK 1.30.0 TypeScript application under `apps/search-ops-mcp`
-- Exact site registry, fixed WordPress control client, server-side credential references, tenant/site/scope checks, bounded untrusted-data envelopes, safe audit records, local stdio mode, mock protocol tests, and real localhost MCP test
+- Stable split MCP SDK v2.0.0 TypeScript application under `apps/search-ops-mcp`
+- Exact site registry, fixed WordPress control client, server-side credential references, tenant/site/scope checks, bounded untrusted-data envelopes, safe audit records, local stdio mode, modern HTTP/Auth0 resource-server mode, protocol tests, and real localhost MCP test
 - Uniform `contract_version: 1.0` on successful WordPress control responses
 - Repeatable MariaDB schema fallback and destructive migration fixture hardening
 
@@ -214,7 +223,7 @@ Existing WordPress site
 Important boundaries:
 
 - No operator chat web UI currently exists in this repository. `chat.starfiniti.com` must not be pointed at the stdio MCP process.
-- Remote MCP Streamable HTTP is not implemented yet. Do not expose `apps/search-ops-mcp/src/stdio.ts` over a socket wrapper.
+- Remote MCP Streamable HTTP is implemented locally but not deployment-certified. Do not expose `apps/search-ops-mcp/src/stdio.ts` over a socket wrapper or publish the HTTP service before the remaining `MCP-003` gates pass.
 - Typesense TCP 8108 and all administration endpoints stay private. Search/index/admin keys are separate; the admin key never reaches browsers, WordPress configuration, logs, or model context.
 - WordPress database and MariaDB are not exposed publicly.
 - SSH should be key-only and restricted by source IP or a trusted access layer where practical.
@@ -244,7 +253,7 @@ Do not create a wildcard record unless there is a documented need and matching c
 6. Deploy a reverse proxy with TLS, security headers, request/body/time limits, access-log redaction, and separate health/readiness routing.
 7. Deploy Typesense using an exact official image digest for the selected v30 release. Record version and digest. Keep it private.
 8. Create separate secret-store entries and least-privilege Typesense keys for search, indexing, provisioning, `synonym_sets:*`, and `curation_sets:*` actions.
-9. Implement and test remote MCP transport/auth before binding a public MCP hostname.
+9. Deploy and certify the implemented remote MCP transport/auth before binding a public MCP hostname.
 10. Run Typesense real-service conformance, import/partial-failure, alias activation/rollback, relevance reconciliation, outage, deadline, retry, circuit, snapshot, and restore tests.
 11. Run `benchmark:http:strict` against the production-like WordPress/PHP-FPM or equivalent runtime and record p50/p95/p99 evidence.
 12. Create DNS records with low TTL, validate TLS/health/auth, then raise TTL.
@@ -252,22 +261,16 @@ Do not create a wildcard record unless there is a documented need and matching c
 
 ## Remote MCP work still required
 
-Implement this as a separate reviewed change; local claim validation is not sufficient:
+The implementation exists and passes local protocol/security tests. The remaining work is deployed certification:
 
-- official MCP Streamable HTTP server transport
-- `/healthz` and `/readyz` outside the MCP transport
-- OAuth 2.1 protected-resource metadata
-- authorization-server discovery and PKCE client compatibility
-- cryptographic JWT signature verification against pinned/discovered JWKS
-- exact issuer, audience, subject, tenant, client, scope, expiry, not-before, issued-at, token lifetime, and token-ID checks
-- revocation strategy and key-rotation behavior
-- TLS and proxy-aware origin policy
-- per-tenant rate, request-size, concurrency, and audit controls
-- OpenTelemetry-compatible metrics/traces with strict secret and catalog-content redaction
-- restart, multi-instance, replay, malformed-token, wrong-audience, revoked-token, and tenant-crossing tests
-- no forwarding of MCP bearer tokens to WordPress
+- provision Auth0 EU, the Google Workspace domain connection, RFC 9068 access-token profile, Resource Parameter Compatibility Profile, DCR/CIMD posture, tenant ACL, least-privilege default API permissions, and the namespaced tenant claim
+- deploy behind TLS with the exact Caddy route allowlist; keep `/livez`, `/readyz`, and `/metrics` private
+- validate Codex desktop/CLI, MCP Inspector, and the official TypeScript v2 client through the real OAuth authorization-code/PKCE flow
+- exercise JWKS rotation, restart, replay, malformed-token, wrong-audience, revoked-token, tenant-crossing, rate, body-size, concurrency, and proxy-origin cases
+- connect metrics/logs to the private observability stack with strict secret and catalog-content redaction
+- obtain the external security review and retain evidence that MCP bearer tokens are never forwarded to WordPress
 
-The current `validateVerifiedClaims` function is a post-signature claim-policy layer only. Never call it with an unverified token.
+`validateVerifiedClaims` remains a post-signature claim-policy layer. Only `RemoteJwtVerifier` may feed it remote claims after successful JOSE verification.
 
 ## Typesense certification still required
 
