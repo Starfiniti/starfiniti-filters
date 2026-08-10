@@ -1,0 +1,22 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "meta": {
+    "title": "Starfiniti FiboFilters golden baseline",
+    "author": "Starfiniti",
+    "description": "Deterministic compatibility fixture for FiboFilters 1.12.1 on WooCommerce 10.7.0."
+  },
+  "features": {
+    "networking": false
+  },
+  "landingPage": "/wp-admin/plugins.php",
+  "steps": [
+    {
+      "step": "activatePlugin",
+      "pluginPath": "/wordpress/wp-content/plugins/woocommerce/woocommerce.php"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "/wordpress/wp-content/plugins/starfiniti-golden-fixtures/starfiniti-golden-fixtures.php"
+    }
+  ]
+}

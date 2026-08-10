@@ -1,0 +1,50 @@
+name: Qualification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-qualification:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install pnpm
+        shell: pwsh
+        run: npm install --global pnpm@10.15.0
+      - name: Install locked JavaScript dependencies
+        shell: pwsh
+        run: pnpm install --frozen-lockfile
+      - name: Provision pinned PHP, MariaDB, WordPress, WooCommerce and WP-CLI
+        shell: pwsh
+        run: pnpm wordpress:setup
+      - name: Run qualification suites
+        shell: pwsh
+        run: pnpm test:all
+      - name: Reproduce, install, and qualify the exact release artifact
+        shell: pwsh
+        run: pnpm qualify:artifact
+      - name: Upload qualification artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: starfiniti-search-qualification
+          path: |
+            dist/starfiniti-search.zip
+            dist/starfiniti-search.cdx.json
+            dist/release-manifest.json
+          if-no-files-found: error
+          retention-days: 14

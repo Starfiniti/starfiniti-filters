@@ -1,0 +1,17 @@
+# The immutable specification pack uses two trailing spaces for Markdown hard breaks.
+spec/starfiniti-search-codex-spec/STARFINITI_SEARCH_CODEX_MASTER_SPEC.md whitespace=-trailing-space
+spec/starfiniti-search-codex-spec/docs/REFERENCES.md whitespace=-trailing-space
+
+# Preserve qualified snapshot bytes while keeping whitespace checks enabled elsewhere.
+NOTICE whitespace=-blank-at-eof
+UPSTREAM.md whitespace=-blank-at-eof
+config/upstreams.json whitespace=-blank-at-eof
+docs/adr/0001-dual-upstream-boundary.md whitespace=-blank-at-eof
+docs/adr/0002-license-and-rebrand-policy.md whitespace=-blank-at-eof
+plugin/starfiniti-search/src/Domain/Catalog/Money.php whitespace=-blank-at-eof
+plugin/starfiniti-search/src/Domain/Support/CanonicalJson.php whitespace=-blank-at-eof
+tests/php/unit/CanonicalJsonTest.php whitespace=-blank-at-eof
+tests/php/unit/MoneyTest.php whitespace=-blank-at-eof
+tools/audit-upstreams.mjs whitespace=-blank-at-eof
+tools/fibofilters-baseline.ps1 whitespace=-blank-at-eof
+tools/test-php.ps1 whitespace=-blank-at-eof

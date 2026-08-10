@@ -1,0 +1,26 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "meta": {
+    "title": "Starfiniti FiboSearch Free golden baseline",
+    "author": "Starfiniti",
+    "description": "Deterministic compatibility fixture for FiboSearch Free 1.34.0 on WooCommerce 10.7.0."
+  },
+  "features": {
+    "networking": false
+  },
+  "landingPage": "/wp-admin/plugins.php",
+  "steps": [
+    {
+      "step": "activatePlugin",
+      "pluginPath": "/wordpress/wp-content/plugins/woocommerce/woocommerce.php"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "/wordpress/wp-content/plugins/starfiniti-golden-fixtures/starfiniti-golden-fixtures.php"
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "/wordpress/wp-content/plugins/ajax-search-for-woocommerce/ajax-search-for-woocommerce.php"
+    }
+  ]
+}

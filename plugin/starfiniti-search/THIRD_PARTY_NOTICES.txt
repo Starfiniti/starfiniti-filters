@@ -1,0 +1,6 @@
+Third-party notices
+===================
+
+The distributable Starfiniti Search plugin contains no bundled third-party runtime libraries.
+
+It integrates at runtime with WordPress and WooCommerce, which are installed separately. FiboFilters and FiboSearch were used only as documented behavioral and compatibility references; none of their source, processed indexes, vendor namespaces, commercial endpoints, or assets are included in this package.

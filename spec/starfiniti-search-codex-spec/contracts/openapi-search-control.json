@@ -1,0 +1,810 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Starfiniti Search Control API",
+    "version": "1.0.0",
+    "description": "Deterministic control API used by WordPress administration, CLI, automation, and the Search Operations MCP server. No endpoint returns secret values."
+  },
+  "servers": [
+    {
+      "url": "/wp-json/starfiniti-search/v1"
+    }
+  ],
+  "security": [
+    {
+      "wpApplicationPassword": []
+    },
+    {
+      "oauth2": [
+        "search.read"
+      ]
+    }
+  ],
+  "paths": {
+    "/control/status": {
+      "get": {
+        "operationId": "getSearchStatus",
+        "summary": "Get observed search status",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/capabilities": {
+      "get": {
+        "operationId": "getSearchCapabilities",
+        "summary": "Get provider and platform capabilities",
+        "responses": {
+          "200": {
+            "description": "Capabilities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "provider-capabilities.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/configuration": {
+      "get": {
+        "operationId": "getSearchConfiguration",
+        "summary": "Get active desired configuration without secrets",
+        "responses": {
+          "200": {
+            "description": "Configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "desired-configuration.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/search/test": {
+      "post": {
+        "operationId": "testSearchQuery",
+        "summary": "Execute an authorized diagnostic search",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.read"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "search-request.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Normalized search response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "search-response.schema.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/control/providers/validate": {
+      "post": {
+        "operationId": "validateProviderConfiguration",
+        "summary": "Validate a provider connection and permissions without exposing credentials",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.config.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "provider_id",
+                  "configuration_reference"
+                ],
+                "properties": {
+                  "provider_id": {
+                    "type": "string"
+                  },
+                  "configuration_reference": {
+                    "type": "string"
+                  },
+                  "deep": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Redacted validation report"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/control/configuration/plan": {
+      "post": {
+        "operationId": "planConfigurationChange",
+        "summary": "Create an immutable dry-run configuration plan",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.config.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "desired-configuration.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operation plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "operation-plan.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/configuration/apply": {
+      "post": {
+        "operationId": "applyConfigurationPlan",
+        "summary": "Apply an approved immutable configuration plan",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.config.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/ExpectedRevision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Operation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/control/index/plan": {
+      "post": {
+        "operationId": "planIndexOperation",
+        "summary": "Plan build, migration, activation, rollback, or reconciliation",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.index.plan"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "provider_id",
+                  "dry_run"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "build",
+                      "migrate",
+                      "verify",
+                      "activate",
+                      "rollback",
+                      "reconcile",
+                      "cleanup"
+                    ]
+                  },
+                  "provider_id": {
+                    "type": "string"
+                  },
+                  "target_version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 4096
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operation plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "operation-plan.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/index/start": {
+      "post": {
+        "operationId": "startIndexOperation",
+        "summary": "Start an approved candidate build or reconciliation",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.index.execute"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Operation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/index/activate": {
+      "post": {
+        "operationId": "activateIndexCandidate",
+        "summary": "Activate a verified candidate",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.index.activate"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/ExpectedRevision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteApprovedPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Activation accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/control/index/rollback": {
+      "post": {
+        "operationId": "rollbackSearchIndex",
+        "summary": "Rollback to a retained verified index",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.index.rollback"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/ExpectedRevision"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteApprovedPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Rollback accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/control/operations/{operationId}": {
+      "get": {
+        "operationId": "getSearchOperation",
+        "summary": "Get long-running operation status",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/control/diagnostics": {
+      "get": {
+        "operationId": "getSearchDiagnostics",
+        "summary": "Get bounded secret-redacted diagnostics",
+        "security": [
+          {
+            "wpApplicationPassword": []
+          },
+          {
+            "oauth2": [
+              "search.diagnostics.read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Diagnostics"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "wpApplicationPassword": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Dedicated low-privilege WordPress integration user."
+      },
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://authorization.example.invalid/authorize",
+            "tokenUrl": "https://authorization.example.invalid/token",
+            "scopes": {
+              "search.read": "Read status and perform safe diagnostic search",
+              "search.diagnostics.read": "Read redacted diagnostics",
+              "search.config.read": "Read and plan configuration",
+              "search.config.write": "Apply configuration",
+              "search.index.plan": "Plan index operations",
+              "search.index.execute": "Start candidate builds and reconciliation",
+              "search.index.activate": "Activate verified candidate",
+              "search.index.rollback": "Rollback active index"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 255
+        }
+      },
+      "ExpectedRevision": {
+        "name": "If-Match",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "description": "Expected active state or configuration revision."
+      }
+    },
+    "schemas": {
+      "Status": {
+        "type": "object",
+        "required": [
+          "contract_version",
+          "state",
+          "active_read_provider",
+          "write_targets",
+          "active_index",
+          "queue",
+          "health",
+          "observed_at"
+        ],
+        "properties": {
+          "contract_version": {
+            "type": "string",
+            "const": "1.0"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "building",
+              "verification_required",
+              "stale",
+              "misconfigured",
+              "unavailable"
+            ]
+          },
+          "active_read_provider": {
+            "type": "string"
+          },
+          "write_targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active_index": {
+            "type": "object"
+          },
+          "queue": {
+            "type": "object"
+          },
+          "health": {
+            "type": "object"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExecutePlan": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "plan_hash",
+          "dry_run",
+          "reason"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plan_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "const": false
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExecuteApprovedPlan": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ExecutePlan"
+          },
+          {
+            "type": "object",
+            "required": [
+              "approval_token"
+            ],
+            "properties": {
+              "approval_token": {
+                "type": "string",
+                "minLength": 32,
+                "maxLength": 8192
+              }
+            }
+          }
+        ]
+      },
+      "Operation": {
+        "type": "object",
+        "required": [
+          "operation_id",
+          "type",
+          "state",
+          "progress",
+          "created_at",
+          "updated_at",
+          "correlation_id"
+        ],
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "queued",
+              "running",
+              "paused",
+              "verification_required",
+              "ready_to_activate",
+              "activating",
+              "completed",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "progress": {
+            "type": "object"
+          },
+          "safe_error": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "correlation_id": {
+            "type": "string"
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "correlation_id"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "correlation_id": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "Typed safe error",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    }
+  }
+}

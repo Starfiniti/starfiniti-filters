@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.starfiniti.example/desired-configuration.schema.json",
+  "title": "Desired Search Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "revision",
+    "active_read_provider",
+    "write_targets",
+    "transport_policy",
+    "catalog",
+    "ranking",
+    "analytics",
+    "operations"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "active_read_provider": {
+      "type": "string",
+      "enum": [
+        "local",
+        "typesense"
+      ]
+    },
+    "write_targets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "local",
+          "typesense"
+        ]
+      }
+    },
+    "transport_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "allow_verified_local_fallback"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "wordpress_rest",
+            "local_fast_public",
+            "typesense_direct_public",
+            "typesense_proxy"
+          ]
+        },
+        "allow_verified_local_fallback": {
+          "type": "boolean"
+        },
+        "max_fallback_age_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "required": [
+        "locales",
+        "variation_strategy",
+        "visibility_policy",
+        "price_policy"
+      ],
+      "properties": {
+        "locales": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "variation_strategy": {
+          "type": "string",
+          "enum": [
+            "parent_collapsed",
+            "variation_as_result"
+          ]
+        },
+        "visibility_policy": {
+          "type": "string",
+          "enum": [
+            "public",
+            "scope_tokens",
+            "server_revalidate",
+            "separate_indexes"
+          ]
+        },
+        "price_policy": {
+          "type": "string",
+          "enum": [
+            "public_single",
+            "per_currency",
+            "per_price_scope",
+            "server_hydrate",
+            "hidden"
+          ]
+        },
+        "custom_fields": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "meta_key", "type"],
+            "properties": {
+              "field": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+              },
+              "meta_key": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.:-]{1,191}$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["string", "integer", "number", "boolean"]
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ranking": {
+      "type": "object"
+    },
+    "analytics": {
+      "type": "object"
+    },
+    "operations": {
+      "type": "object"
+    },
+    "provider_configuration_refs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 255
+      }
+    }
+  }
+}

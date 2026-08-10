@@ -1,0 +1,2 @@
+<?php
+return ['dependencies' => ['wp-blocks', 'wp-element', 'wp-i18n'], 'version' => '0.3.0-alpha.1'];

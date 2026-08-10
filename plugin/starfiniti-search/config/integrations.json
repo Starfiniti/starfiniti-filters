@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "integrations": [
+    {
+      "integration_id": "theme-twentytwentyfive",
+      "theme_or_plugin": "Twenty Twenty-Five",
+      "supported_version_range": "1.x",
+      "detection": {"type": "theme_slug", "values": ["twentytwentyfive"]},
+      "assets": ["starfiniti-search"],
+      "dom_strategy": "Shared semantic form and discovery roots; no theme DOM rewrite.",
+      "known_limitations": ["Licensed assistive-technology matrix remains external."],
+      "test_evidence": ["tests/php/integration/storefront-contract.php", "tools/verify-storefront.mjs", "docs/QUALIFICATION_EVIDENCE.md"],
+      "last_verified": "2026-08-09",
+      "status": "automated_qualification"
+    },
+    {
+      "integration_id": "theme-storefront",
+      "theme_or_plugin": "WooCommerce Storefront",
+      "supported_version_range": "4.x",
+      "detection": {"type": "theme_slug", "values": ["storefront"]},
+      "assets": ["starfiniti-search"],
+      "dom_strategy": "Shared renderer in widget, shortcode, block, or template API; no global form replacement.",
+      "known_limitations": ["Manual header placement and zoom certification pending."],
+      "test_evidence": [],
+      "last_verified": null,
+      "status": "pending_manual"
+    },
+    {
+      "integration_id": "themes-common-builders",
+      "theme_or_plugin": "Astra, OceanWP, Kadence, Blocksy, GeneratePress, Elementor, Bricks",
+      "supported_version_range": "Uncertified",
+      "detection": {"type": "theme_or_plugin_slug", "values": ["astra", "oceanwp", "kadence", "blocksy", "generatepress", "elementor", "bricks"]},
+      "assets": ["starfiniti-search"],
+      "dom_strategy": "Use block, shortcode, widget, or PHP API inside an owned container; never rewrite unrelated forms.",
+      "known_limitations": ["Version-specific automated and manual matrices pending."],
+      "test_evidence": [],
+      "last_verified": null,
+      "status": "pending_matrix"
+    },
+    {
+      "integration_id": "themes-licensed-builders",
+      "theme_or_plugin": "Flatsome, WoodMart, Divi, Avada, XStore, Impreza",
+      "supported_version_range": "Uncertified",
+      "detection": {"type": "theme_or_plugin_slug", "values": ["flatsome", "woodmart", "divi", "avada", "xstore", "impreza"]},
+      "assets": ["starfiniti-search"],
+      "dom_strategy": "Controlled placement through public render APIs only.",
+      "known_limitations": ["Licensed test environments and manual certification required."],
+      "test_evidence": [],
+      "last_verified": null,
+      "status": "requires_controlled_environment"
+    }
+  ]
+}

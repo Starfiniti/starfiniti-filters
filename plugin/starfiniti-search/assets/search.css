@@ -1,0 +1,134 @@
+.sfs-search {
+  position: relative;
+  width: min(100%, 42rem);
+}
+
+.sfs-search__input {
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  width: 100%;
+}
+
+.sfs-search__close { display: none; }
+
+.sfs-search[data-mobile-overlay="open"] {
+  align-content: start;
+  background: Canvas;
+  box-sizing: border-box;
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  inset: 0;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: auto;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  position: fixed;
+  width: 100%;
+  z-index: 100000;
+}
+
+.sfs-search[data-mobile-overlay="open"] .sfs-search__close { display: block; }
+.sfs-search[data-mobile-overlay="open"] .sfs-search__results { grid-column: 1 / -1; max-height: none; position: static; }
+.sfs-mobile-search-open { overscroll-behavior: none; }
+
+.sfs-search__results {
+  background: Canvas;
+  border: 1px solid ButtonBorder;
+  box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / 12%);
+  box-sizing: border-box;
+  inset-inline: 0;
+  list-style: none;
+  margin: .25rem 0 0;
+  max-height: min(26rem, 70vh);
+  overflow: auto;
+  padding: .25rem;
+  position: absolute;
+  z-index: 1000;
+}
+
+.sfs-search__option a {
+  color: CanvasText;
+  display: block;
+  min-height: 2.75rem;
+  padding: .75rem;
+  text-decoration: none;
+}
+
+.sfs-discovery {
+  --sfs-border: color-mix(in srgb, CanvasText 22%, transparent);
+  color: CanvasText;
+  container-type: inline-size;
+  max-width: 90rem;
+}
+
+.sfs-discovery__controls {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(16rem, 2fr) repeat(3, minmax(10rem, 1fr));
+  margin-block: 1rem 1.5rem;
+}
+
+.sfs-discovery__query {
+  display: grid;
+  gap: .35rem;
+  grid-template-columns: 1fr auto;
+}
+
+.sfs-discovery__query label { grid-column: 1 / -1; }
+.sfs-discovery input[type="search"],
+.sfs-discovery select,
+.sfs-discovery button { box-sizing: border-box; min-height: 2.75rem; }
+.sfs-discovery fieldset { border: 1px solid var(--sfs-border); margin: 0; min-width: 0; padding: .5rem .75rem; }
+.sfs-discovery fieldset label,
+.sfs-discovery [data-sfs-category-options] { display: grid; gap: .4rem; }
+.sfs-discovery fieldset label { align-items: center; grid-template-columns: 1.5rem 1fr; min-height: 2.75rem; }
+.sfs-discovery__sort { display: grid; gap: .35rem; }
+.sfs-discovery__status { margin-block: .75rem; min-height: 1.5em; }
+
+.sfs-discovery__results {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 6rem;
+}
+
+.sfs-discovery__results[aria-busy="true"] { opacity: .55; }
+.sfs-product-card { border: 1px solid var(--sfs-border); min-width: 0; padding: 1rem; }
+.sfs-product-card img { aspect-ratio: 1; display: block; height: auto; object-fit: cover; width: 100%; }
+.sfs-product-card h3 { font-size: 1rem; margin-block: .75rem .25rem; overflow-wrap: anywhere; }
+.sfs-product-card__price { font-weight: 700; }
+.sfs-product-card__meta { font-size: .875rem; opacity: .8; }
+.sfs-product-card__details-toggle { min-height: 2.75rem; width: 100%; }
+.sfs-product-card__details { border-block-start: 1px solid var(--sfs-border); margin-block-start: .75rem; padding-block-start: .75rem; }
+.sfs-product-card__details a { display: inline-flex; min-height: 2.75rem; align-items: center; }
+.sfs-discovery__pagination { align-items: center; display: flex; gap: 1rem; justify-content: center; margin-block: 1.5rem; }
+
+@container (max-width: 60rem) {
+  .sfs-discovery__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sfs-discovery__results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 34rem) {
+  .sfs-discovery__controls, .sfs-discovery__results { grid-template-columns: 1fr; }
+}
+
+[dir="rtl"] .sfs-search__results { text-align: start; }
+
+@media (forced-colors: active) {
+  .sfs-product-card, .sfs-discovery fieldset, .sfs-search__results { border: 1px solid CanvasText; }
+}
+
+.sfs-search__option[aria-selected="true"] a,
+.sfs-search__option a:focus,
+.sfs-search__option a:hover {
+  background: Highlight;
+  color: HighlightText;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfs-search * { scroll-behavior: auto !important; }
+}

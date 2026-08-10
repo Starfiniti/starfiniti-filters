@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-09",
+  "scope": "reference archives excluded from the Starfiniti release artifact",
+  "releaseArtifactContainsUpstreamCode": false,
+  "components": [
+    {"package":"freemius/wordpress-sdk","version":"2.13.1","license":"GPL-3.0-only","versionEvidence":"vendor/freemius/wordpress-sdk/config.php","includedInRelease":false},
+    {"package":"psr/container","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"swaggest/json-diff","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"symfony/dependency-injection","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"symfony/deprecation-contracts","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"symfony/polyfill-php80","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"symfony/polyfill-php81","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"symfony/service-contracts","version":null,"license":null,"versionEvidence":"metadata stripped from prefixed binary","includedInRelease":false},
+    {"package":"thanks-to-it/wp-dich","version":"1.0.0","license":null,"versionEvidence":"vendor-prefixed/thanks-to-it/wp-dich/src/class-wp-dich.php","includedInRelease":false},
+    {"package":"freemius/wordpress-sdk","version":"2.13.4","license":"GPL-3.0-only","versionEvidence":"FiboSearch Free vendor metadata","includedInRelease":false}
+  ],
+  "decision": "Unknown exact metadata in a proprietary reference archive is retained as an audit limitation. The release policy scanner prevents this code, its prefixed namespaces, commercial endpoints, archives, and binaries from entering the distributable plugin."
+}

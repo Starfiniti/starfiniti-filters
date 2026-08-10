@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "deterministic": true,
+  "upstreams": [
+    {
+      "id": "fibofilters",
+      "name": "FiboFilters",
+      "version": "1.12.1",
+      "role": "filtering-behavior-and-migration",
+      "package": "audit/packages/fibofilters-pro.1.12.1.zip",
+      "sourceRoot": "audit/source/fibofilters-pro",
+      "declaredLicense": "GPL-3.0-only",
+      "packageSha256": "3E8FEFBFE1C1FBA3126E691F67F2D1C5437E39AC33D5AB6DE44BD912456355D2",
+      "source": {
+        "fileCount": 841,
+        "totalBytes": 10829161,
+        "treeSha256": "4E50D148170407C48FB46AEEDB654DE05253541B2A144B99DE28546916A2E40A",
+        "extensions": {
+          ".css": 27,
+          ".js": 11,
+          ".json": 57,
+          ".md": 2,
+          ".mo": 31,
+          ".php": 662,
+          ".png": 13,
+          ".po": 18,
+          ".pot": 2,
+          ".svg": 5,
+          ".ttf": 1,
+          ".twig": 2,
+          ".txt": 4,
+          ".woff": 1,
+          ".xml": 1,
+          ".xsd": 1,
+          "[none]": 3
+        }
+      }
+    },
+    {
+      "id": "fibosearch-free",
+      "name": "FiboSearch – Ajax Search for WooCommerce",
+      "version": "1.34.0",
+      "role": "public-storefront-reference",
+      "package": "audit/packages/ajax-search-for-woocommerce.1.34.0.zip",
+      "sourceRoot": "audit/source/fibosearch-free/ajax-search-for-woocommerce",
+      "declaredLicense": "GPL-2.0-or-later",
+      "packageSha256": "2631D9CB5450D6A8F3B2BEBBE2DC27EBB633A1A7F423E1B6C8AF78D7B241F40D",
+      "source": {
+        "fileCount": 447,
+        "totalBytes": 5289904,
+        "treeSha256": "EE0F8FF6D5BFF5A69DBB11179F8072C73C650E91A0C26F179A7A30F88F7AB330",
+        "extensions": {
+          ".css": 23,
+          ".gif": 1,
+          ".js": 21,
+          ".json": 10,
+          ".mo": 13,
+          ".php": 323,
+          ".png": 25,
+          ".pot": 1,
+          ".scss": 3,
+          ".svg": 4,
+          ".ts": 6,
+          ".tsx": 8,
+          ".ttf": 1,
+          ".txt": 4,
+          ".woff": 1,
+          ".xml": 2,
+          "[none]": 1
+        }
+      }
+    }
+  ]
+}

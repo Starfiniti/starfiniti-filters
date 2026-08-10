@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "php": {
+    "version": "8.3.28",
+    "url": "https://windows.php.net/downloads/releases/archives/php-8.3.28-nts-Win32-vs16-x64.zip",
+    "sha256": "25530B3D001BA48BCBA83C6DEB22BE03E5799EF66813BEFC079436B8E24BA666"
+  },
+  "mariadb": {
+    "version": "11.4.10",
+    "url": "https://archive.mariadb.org/mariadb-11.4.10/winx64-packages/mariadb-11.4.10-winx64.zip",
+    "sha256": "FB7C76F0804321EE373DAA49145F2056D2D88F321B614130ADEB05A1644EA003",
+    "port": 3307
+  },
+  "wordpress": {
+    "version": "7.0.2",
+    "url": "https://wordpress.org/wordpress-7.0.2.zip",
+    "sha1": "0DC8F6BD325A0565C3FA4975DE8ED1683A4F5CB3",
+    "sha256": "A616580ED2152AE71D81439884B4BCDA329C5322F9BD2092AC7A3A68DBCEA7A7"
+  },
+  "wpCli": {
+    "version": "2.12.0",
+    "url": "https://github.com/wp-cli/wp-cli/releases/download/v2.12.0/wp-cli-2.12.0.phar",
+    "sha256": "CE34DDD838F7351D6759068D09793F26755463B4A4610A5A5C0A97B68220D85C"
+  },
+  "caBundle": {
+    "version": "2026-07-16",
+    "url": "https://curl.se/ca/cacert-2026-07-16.pem",
+    "sha256": "3FF344E30B9B1ED2971044EABB438A08F2E2245DDB5F8AB1A3AD8B63AB4EAF91",
+    "license": "MPL-2.0"
+  },
+  "woocommerce": {
+    "version": "10.7.0",
+    "distributionUrl": "https://downloads.wordpress.org/plugin/woocommerce.10.7.0.zip",
+    "source": "audit/packages/woocommerce.10.7.0.zip",
+    "sha256": "3C3D72BE3A2B7FE4B26D34C09C572F6BC0B230D2B69B968307FCA41AAEEF8BEE"
+  },
+  "pluginCheck": {
+    "version": "2.0.0",
+    "distributionUrl": "https://downloads.wordpress.org/plugin/plugin-check.2.0.0.zip",
+    "sha256": "D744EE1F93866527AEDF7D0A73DF40BD87018F02CD5465FA39230BF4C2B3A3FA"
+  }
+}

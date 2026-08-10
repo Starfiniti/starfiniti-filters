@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.starfiniti.example/provider-capabilities.schema.json",
+  "title": "Provider Capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "provider_id",
+    "adapter_version",
+    "capabilities",
+    "limits"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "provider_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{1,63}$"
+    },
+    "adapter_version": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "capabilities": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "state",
+          "notes"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "native",
+              "emulated",
+              "degraded",
+              "unsupported"
+            ]
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1024
+            }
+          },
+          "limits": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_page_size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_facets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_filter_nodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_query_length": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": {
+        "type": [
+          "integer",
+          "number",
+          "string",
+          "boolean",
+          "null"
+        ]
+      }
+    }
+  }
+}

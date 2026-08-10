@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.starfiniti.example/search-response.schema.json",
+  "title": "Starfiniti SearchResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "provider",
+    "index_version",
+    "query_id",
+    "hits",
+    "facets",
+    "total",
+    "page",
+    "timing",
+    "warnings"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "index_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "query_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 255
+    },
+    "hits": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id",
+          "entity_type",
+          "entity_id",
+          "parent_id",
+          "score",
+          "rank",
+          "highlights",
+          "matched_fields",
+          "projection"
+        ],
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "entity_type": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "entity_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "parent_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "highlights": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "highlighted"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "maxLength": 10000
+                  },
+                  "highlighted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "matched_fields": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "projection": {
+            "type": "object"
+          },
+          "explanation": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "facets": {
+      "type": "object"
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "size",
+        "has_more"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_ms",
+        "application_ms",
+        "total_ms"
+      ],
+      "properties": {
+        "provider_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "application_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "maxLength": 1024
+      }
+    },
+    "redirect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "rule_id"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "maxLength": 2048,
+          "pattern": "^/(?!/)"
+        },
+        "rule_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        }
+      }
+    }
+  }
+}

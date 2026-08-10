@@ -1,0 +1,35 @@
+[PHP]
+extension_dir = "{{EXTENSION_DIR}}"
+zend_extension = php_opcache.dll
+extension = curl
+extension = intl
+extension = mbstring
+extension = mysqli
+extension = openssl
+extension = pdo_mysql
+extension = sodium
+extension = zip
+
+curl.cainfo = "{{CA_BUNDLE}}"
+openssl.cafile = "{{CA_BUNDLE}}"
+
+date.timezone = UTC
+default_charset = UTF-8
+display_errors = On
+display_startup_errors = On
+error_reporting = E_ALL
+log_errors = On
+memory_limit = 512M
+max_execution_time = 0
+max_input_vars = 5000
+post_max_size = 128M
+upload_max_filesize = 128M
+
+[opcache]
+opcache.enable = 1
+opcache.enable_cli = 1
+opcache.memory_consumption = 128
+opcache.interned_strings_buffer = 16
+opcache.max_accelerated_files = 20000
+opcache.validate_timestamps = 1
+opcache.revalidate_freq = 0

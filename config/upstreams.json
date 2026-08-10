@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "upstreams": [
+    {
+      "id": "fibofilters",
+      "name": "FiboFilters",
+      "version": "1.12.1",
+      "role": "filtering-behavior-and-migration",
+      "package": "audit/packages/fibofilters-pro.1.12.1.zip",
+      "sourceRoot": "audit/source/fibofilters-pro",
+      "sha256": "3E8FEFBFE1C1FBA3126E691F67F2D1C5437E39AC33D5AB6DE44BD912456355D2",
+      "declaredLicense": "GPL-3.0-only",
+      "licenseEvidence": "audit/source/fibofilters-pro/readme.txt"
+    },
+    {
+      "id": "fibosearch-free",
+      "name": "FiboSearch – Ajax Search for WooCommerce",
+      "version": "1.34.0",
+      "role": "public-storefront-reference",
+      "sourceUrl": "https://downloads.wordpress.org/plugin/ajax-search-for-woocommerce.1.34.0.zip",
+      "package": "audit/packages/ajax-search-for-woocommerce.1.34.0.zip",
+      "sourceRoot": "audit/source/fibosearch-free/ajax-search-for-woocommerce",
+      "sha256": "2631D9CB5450D6A8F3B2BEBBE2DC27EBB633A1A7F423E1B6C8AF78D7B241F40D",
+      "declaredLicense": "GPL-2.0-or-later",
+      "licenseEvidence": "audit/source/fibosearch-free/ajax-search-for-woocommerce/readme.txt"
+    }
+  ]
+}
+

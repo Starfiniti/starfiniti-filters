@@ -1,0 +1,12 @@
+/audit/packages/
+/audit/source/
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+**/dist/
+**/node_modules/
+**/vendor/
+/.runtime/
+/.env
+/.env.*
+!/.env.example

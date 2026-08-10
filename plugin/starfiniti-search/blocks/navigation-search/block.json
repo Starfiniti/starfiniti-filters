@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "starfiniti/navigation-search",
+  "version": "0.3.0-alpha.1",
+  "title": "Starfiniti Navigation Search",
+  "category": "design",
+  "icon": "search",
+  "description": "The shared accessible Starfiniti product search for a Navigation block or template part.",
+  "keywords": ["navigation", "menu", "woocommerce", "search"],
+  "textdomain": "starfiniti-search",
+  "parent": ["core/navigation"],
+  "supports": {"html": false},
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

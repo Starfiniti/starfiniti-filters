@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.starfiniti.example/search-request.schema.json",
+  "title": "Starfiniti SearchRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "query",
+    "context",
+    "fields",
+    "filters",
+    "facets",
+    "sort",
+    "page",
+    "options"
+  ],
+  "$defs": {
+    "filter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "op",
+            "value"
+          ],
+          "properties": {
+            "field": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "eq",
+                "neq",
+                "in",
+                "not_in",
+                "contains",
+                "not_contains",
+                "lt",
+                "lte",
+                "gt",
+                "gte",
+                "between",
+                "exists"
+              ]
+            },
+            "value": {}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "and"
+          ],
+          "properties": {
+            "and": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/filter"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "or"
+          ],
+          "properties": {
+            "or": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/filter"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "not"
+          ],
+          "properties": {
+            "not": {
+              "$ref": "#/$defs/filter"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "query": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "site_id",
+        "blog_id",
+        "locale",
+        "currency",
+        "customer_scope",
+        "channel"
+      ],
+      "properties": {
+        "site_id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "blog_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "locale": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "customer_scope": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "channel": {
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      }
+    },
+    "filters": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/filter"
+        }
+      ]
+    },
+    "facets": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      }
+    },
+    "sort": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "direction"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "size"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "highlight",
+        "include_explanation",
+        "suggestion_mode"
+      ],
+      "properties": {
+        "highlight": {
+          "type": "boolean"
+        },
+        "include_explanation": {
+          "type": "boolean"
+        },
+        "suggestion_mode": {
+          "type": "string",
+          "enum": [
+            "autocomplete",
+            "full_results",
+            "admin_test"
+          ]
+        },
+        "deadline_ms": {
+          "type": "integer",
+          "minimum": 25,
+          "maximum": 10000
+        }
+      }
+    }
+  }
+}

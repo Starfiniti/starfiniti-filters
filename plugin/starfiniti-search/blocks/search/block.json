@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "starfiniti/search",
+  "version": "0.3.0-alpha.1",
+  "title": "Starfiniti Product Search",
+  "category": "widgets",
+  "icon": "search",
+  "description": "Accessible WooCommerce product search backed by the active Starfiniti provider.",
+  "keywords": ["woocommerce", "products", "search"],
+  "textdomain": "starfiniti-search",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

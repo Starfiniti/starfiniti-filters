@@ -1,0 +1,23 @@
+[
+  {
+    "tenant_id": "tenant-example",
+    "site_id": "local-store",
+    "display_name": "Local Starfiniti Store",
+    "environment": "development",
+    "control_api_base": "http://127.0.0.1:8088/wp-json/starfiniti-search/v1",
+    "credential_reference": "env:STARFINITI_WP_CONTROL_LOCAL",
+    "auth_type": "application_password",
+    "allowed_operations": [
+      "status",
+      "capabilities",
+      "configuration",
+      "operations",
+      "operation",
+      "audit",
+      "plan"
+    ],
+    "installation_uuid": "00000000-0000-4000-8000-000000000001",
+    "control_contract_version": "1.0",
+    "status": "active"
+  }
+]
