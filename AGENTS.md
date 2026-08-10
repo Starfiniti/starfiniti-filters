@@ -48,6 +48,7 @@ Run the narrowest relevant checks during development, then the complete gates be
 
 ```powershell
 pnpm install --frozen-lockfile
+pnpm verify:infra
 pnpm test
 pnpm test:all
 pnpm test:mcp:live

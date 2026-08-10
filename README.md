@@ -37,6 +37,7 @@ pnpm wordpress:setup
 pnpm test:php
 pnpm test:mcp
 pnpm test:mcp:live
+pnpm verify:infra
 pnpm verify:contracts
 pnpm test:integration
 pnpm test:lifecycle
