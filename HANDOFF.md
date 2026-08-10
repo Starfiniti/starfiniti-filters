@@ -2,6 +2,37 @@
 
 Snapshot date: 2026-08-10 (Europe/Ljubljana)
 
+## Continuation update — 2026-08-10
+
+- Published source restored at commit `b21763b2b685efd44d3fe763b475ce4ff7edeb03` on local branch `codex/resume-infrastructure`, tracking `origin/main`.
+- Work is uncommitted. The only source change before this handoff update is a repository-wide LF rule in `.gitattributes`, added because the global Windows `core.autocrlf=true` setting changed qualified package bytes and made deterministic manifests fail on this machine.
+- The partial pre-publication working copy was preserved in the sibling directory `starfiniti-filters-pre-handoff-backup-20260810-1500`; it contained 29 specification files, of which 24 matched `origin/main` and five were older/different. Nothing from that backup was merged.
+- The pinned public FiboSearch 1.34.0 archive was restored from the official WordPress download URL. Its package SHA-256 is `2631D9CB5450D6A8F3B2BEBBE2DC27EBB633A1A7F423E1B6C8AF78D7B241F40D`, and the extracted 447-file tree is `EE0F8FF6D5BFF5A69DBB11179F8072C73C650E91A0C26F179A7A30F88F7AB330`.
+- The commercial FiboFilters reference remained ignored and unchanged. Its package SHA-256 is `3E8FEFBFE1C1FBA3126E691F67F2D1C5437E39AC33D5AB6DE44BD912456355D2`, and the extracted 841-file tree is `4E50D148170407C48FB46AEEDB654DE05253541B2A144B99DE28546916A2E40A`.
+- `pnpm install --frozen-lockfile`: passed through a temporary Corepack shim using pnpm 11.21.0 because the bundled global pnpm launcher referenced a missing module.
+- `pnpm package`: passed and reproduced the exact qualified 74-file, 422590-byte source tree and artifact hashes recorded below.
+- `pnpm test`: passed; 115 requirements and 28 specification hashes verified, PHP 40/40 passed, and MCP 6/6 passed.
+- `pnpm test:all`: passed in 138.1 seconds, including integration, lifecycle, forced worker/builder recovery, disaster recovery, schemas, storefront, and release scan.
+- `pnpm audit --prod --audit-level high`: passed with no known vulnerabilities.
+- `pnpm test:mcp:live`: passed discovery, status, secret-free configuration, and dry-run planning. Temporary MCP Application Passwords remaining after an independent inventory: 0.
+- `pnpm qualify:artifact`: passed in 147.4 seconds. Plugin Check 2.0.0 reported no errors; exact installation, installed contracts, process recovery, disaster recovery, schema validation, and public smoke passed.
+- The pinned localhost runtime is installed and running at `127.0.0.1:8088`: PHP 8.3.28, MariaDB 11.4.10, WordPress 7.0.2, WooCommerce 10.7.0, and WP-CLI 2.12.0. Runtime credentials and machine state remain outside the repository.
+- No VPS, DNS, firewall, reverse-proxy, OAuth provider, Typesense service, or other remote resource was inspected or changed in this continuation.
+- External blockers remain unchanged: licensed relevance judgments/thresholds, real Typesense v30 certification, production-like strict end-to-end latency, remote MCP OAuth/JWT transport, broad external matrices, signing/provenance, and final release approval.
+- Next safe action: identify the intended VPS/SSH target and perform the read-only server inventory in this handoff before proposing any infrastructure or remote MCP changes.
+
+## Sync recovery and infrastructure planning update — 2026-08-10
+
+- Nextcloud synchronization produced eight conflicted copies and displaced the LF rule and continuation evidence from their tracked files. Every conflicted copy was preserved and hash-verified outside the synchronized directory before reconciliation.
+- Work now continues from a clean Git clone outside Nextcloud on `codex/resume-infrastructure` at `b21763b2b685efd44d3fe763b475ce4ff7edeb03`. Only the reviewed `.gitattributes` LF rule and handoff updates are included in the checkpoint.
+- Six synchronized PowerShell files contained an added `Import-Module Microsoft.PowerShell.Utility` line. Those variants were preserved but not merged because the clean published scripts passed the complete qualification chain without the imports.
+- The clean clone reproduced the exact 74-file, 422590-byte plugin tree and the published ZIP, SBOM, and release-manifest hashes. `pnpm test`, `pnpm test:all`, `pnpm test:mcp:live`, the production dependency audit, and `pnpm qualify:artifact` passed. An independent inventory found zero remaining temporary MCP Application Passwords.
+- Read-only infrastructure discovery found a single Proxmox node `s2`, the existing Caddy reverse-proxy container at `10.10.10.30`, and free VM/LXC identifiers and private addresses suitable for the planned certification environment. No VM, container, DNS, proxy, firewall, OAuth, backup, or public-service configuration has been changed yet.
+- The approved implementation direction is a dedicated Ubuntu certification VM, private Typesense 30.2, a private self-hosted observability container, public MCP only at `mcp-search.starfiniti.com`, Auth0 EU with Google Workspace federation, and encrypted off-host restic recovery on the existing `starfiniti`/`s1` host before GA.
+- The approved relevance gate uses a clean-room corpus with exact-SKU top-1 100 percent, forbidden-result rate 0, MRR at least 0.90, NDCG@10 at least 0.85, and Precision@5 at least 0.80. The recovery target is 24-hour RPO and 8-hour RTO with a separate internal operator validating the runbook.
+
+The historical continuation evidence below remains authoritative for the published qualification artifact. Infrastructure implementation must begin only from the clean clone and must preserve the fail-closed release boundary.
+
 ## Read this first
 
 The locally actionable implementation and qualification work is complete. The project is not yet formally enterprise-ready because six mandatory requirements still depend on licensed data, real infrastructure, a production-like runtime, remote authorization, or final release approval.
