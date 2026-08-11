@@ -6,6 +6,13 @@ snapshot directly into Borg. Borg performs authenticated encryption,
 content-defined deduplication, and compression, so the Proxmox host does not need
 a large local staging filesystem.
 
+The service keeps a `UMask=0077` for configuration, credentials, cache, and
+repository state. The `vzdump` child alone runs with `umask 0022`, which
+Proxmox requires so an unprivileged LXC user namespace can enter its temporary
+archive directory. The systemd sandbox keeps the host read-only except for the
+Proxmox/LVM snapshot paths `/etc/lvm`, `/etc/pve`, `/run/lock`, and
+`/var/lib/vz`.
+
 Nothing in this directory contains a hostname, account, private key, repository
 passphrase, or Borg recovery key. Do not add those values to Git.
 

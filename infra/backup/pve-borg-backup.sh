@@ -45,7 +45,7 @@ exec 9>"$lock_file"
 flock -n 9 || fail "another backup run holds $lock_file"
 
 read -r data_percent metadata_percent < <(
-  lvs --noheadings --nosuffix -o data_percent,metadata_percent "$PVE_THIN_POOL_LV" |
+  lvs --noheadings --nosuffix -o data_percent,metadata_percent "$PVE_THIN_POOL_LV" 9>&- |
     awk '{ print $1, $2 }'
 )
 
@@ -112,7 +112,8 @@ backup_guest() {
       --content-from-command \
       --stdin-name "$stream_name" \
       "${BORG_REPO}::${archive_name}" \
-      -- vzdump "$guest_id" --stdout 1 --mode snapshot --compress 0 --quiet 1
+      -- bash -c 'umask 0022; exec vzdump "$@"' _ \
+        "$guest_id" --stdout 1 --mode snapshot --compress 0 --quiet 1
 }
 
 backup_host_configuration() {
