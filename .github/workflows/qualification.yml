@@ -32,6 +32,9 @@ jobs:
       - name: Provision pinned PHP, MariaDB, WordPress, WooCommerce and WP-CLI
         shell: pwsh
         run: pnpm wordpress:setup
+      - name: Generate requirement-linked release evidence
+        shell: pwsh
+        run: pnpm package
       - name: Run qualification suites
         shell: pwsh
         env:
