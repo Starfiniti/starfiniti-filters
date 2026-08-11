@@ -41,7 +41,10 @@ jobs:
           # Licensed and ignored reference archives must never be uploaded to GitHub.
           # CI validates their committed manifest; local qualification re-audits bytes.
           STARFINITI_UPSTREAM_AUDIT_MODE: recorded
-        run: pnpm test:all
+        run: |
+          pnpm wordpress:start
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm test:all
       - name: Reproduce, install, and qualify the exact release artifact
         shell: pwsh
         run: pnpm qualify:artifact
