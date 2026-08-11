@@ -2,6 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeNode = 'C:\Users\dejan\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
 $node = if (Get-Command node -ErrorAction SilentlyContinue) { (Get-Command node).Source } elseif (Test-Path $runtimeNode) { $runtimeNode } else { throw 'Node.js is required.' }
@@ -43,7 +44,7 @@ try {
     $zip.Dispose()
     $stream.Dispose()
 }
-$hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
+$hash = (Get-StarfinitiFileHash -LiteralPath $archive -Algorithm SHA256).Hash
 Write-Output "Packaged $archive"
 Write-Output "SHA256 $hash"
 & $node (Join-Path $PSScriptRoot 'generate-sbom.mjs')

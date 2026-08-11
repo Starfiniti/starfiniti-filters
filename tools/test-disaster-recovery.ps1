@@ -2,6 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) { $env:STARFINITI_SEARCH_RUNTIME_ROOT } else { Join-Path $env:LOCALAPPDATA 'StarfinitiSearch\starfiniti-filters' }
 $lock = Get-Content (Join-Path $repoRoot 'config\runtime-lock.json') -Raw | ConvertFrom-Json
@@ -44,7 +45,7 @@ try {
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $dumpPath) -or (Get-Item -LiteralPath $dumpPath).Length -lt 1024) {
         throw 'Atomic logical backup generation failed.'
     }
-    $backupHash = (Get-FileHash -LiteralPath $dumpPath -Algorithm SHA256).Hash
+    $backupHash = (Get-StarfinitiFileHash -LiteralPath $dumpPath -Algorithm SHA256).Hash
 
     Invoke-AdminSql "CREATE DATABASE ``$restoreDatabase`` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" | Out-Null
     $databaseCreated = $true

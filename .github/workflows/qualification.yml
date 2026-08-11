@@ -17,10 +17,6 @@ jobs:
   windows-qualification:
     runs-on: windows-latest
     timeout-minutes: 45
-    env:
-      # PowerShell 7 sets PSModulePath for itself. The npm scripts intentionally
-      # launch Windows PowerShell, which must also see its built-in modules.
-      PSModulePath: C:\Windows\System32\WindowsPowerShell\v1.0\Modules
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6

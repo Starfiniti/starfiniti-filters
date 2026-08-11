@@ -2,6 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) { $env:STARFINITI_SEARCH_RUNTIME_ROOT } else { Join-Path $env:LOCALAPPDATA 'StarfinitiSearch\starfiniti-filters' }
 $lock = Get-Content (Join-Path $repoRoot 'config\runtime-lock.json') -Raw | ConvertFrom-Json
@@ -21,9 +22,9 @@ function Build-Artifact {
     $packageOutput | ForEach-Object { Write-Host $_ }
     if ($LASTEXITCODE -ne 0) { throw 'Plugin packaging failed.' }
     return @{
-        zip = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
-        sbom = (Get-FileHash -LiteralPath $sbomPath -Algorithm SHA256).Hash
-        manifest = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
+        zip = (Get-StarfinitiFileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
+        sbom = (Get-StarfinitiFileHash -LiteralPath $sbomPath -Algorithm SHA256).Hash
+        manifest = (Get-StarfinitiFileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
     }
 }
 
@@ -46,7 +47,7 @@ function Assert-InstalledArtifact {
                 $hasher = [Security.Cryptography.SHA256]::Create()
                 try { $archiveHash = ([BitConverter]::ToString($hasher.ComputeHash($stream))).Replace('-', '') } finally { $hasher.Dispose() }
             } finally { $stream.Dispose() }
-            if ($archiveHash -ne (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash) {
+            if ($archiveHash -ne (Get-StarfinitiFileHash -LiteralPath $path -Algorithm SHA256).Hash) {
                 throw "Installed file differs from the archive: $relative"
             }
         }

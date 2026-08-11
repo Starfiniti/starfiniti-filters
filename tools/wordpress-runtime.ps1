@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) {
     $env:STARFINITI_SEARCH_RUNTIME_ROOT
@@ -113,7 +114,7 @@ FLUSH PRIVILEGES;
             Invoke-WebRequest -Uri $lock.woocommerce.distributionUrl -OutFile $wooArchive -UseBasicParsing
         }
     }
-    $wooHash = (Get-FileHash -LiteralPath $wooArchive -Algorithm SHA256).Hash
+    $wooHash = (Get-StarfinitiFileHash -LiteralPath $wooArchive -Algorithm SHA256).Hash
     if ($wooHash -ne $lock.woocommerce.sha256) { throw 'WooCommerce archive checksum mismatch.' }
     if (-not (Test-WpCli plugin is-installed woocommerce)) { Invoke-WpCli plugin install $wooArchive }
     if (-not (Test-WpCli plugin is-active woocommerce)) { Invoke-WpCli plugin activate woocommerce }
@@ -122,7 +123,7 @@ FLUSH PRIVILEGES;
     if (-not (Test-Path -LiteralPath $pluginCheckArchive)) {
         Invoke-WebRequest -Uri $lock.pluginCheck.distributionUrl -OutFile $pluginCheckArchive -UseBasicParsing
     }
-    $pluginCheckHash = (Get-FileHash -LiteralPath $pluginCheckArchive -Algorithm SHA256).Hash
+    $pluginCheckHash = (Get-StarfinitiFileHash -LiteralPath $pluginCheckArchive -Algorithm SHA256).Hash
     if ($pluginCheckHash -ne $lock.pluginCheck.sha256) { throw 'Plugin Check archive checksum mismatch.' }
     if (-not (Test-WpCli plugin is-installed plugin-check)) { Invoke-WpCli plugin install $pluginCheckArchive }
     if (-not (Test-WpCli plugin is-active plugin-check)) { Invoke-WpCli plugin activate plugin-check }
