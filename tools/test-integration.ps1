@@ -22,6 +22,11 @@ function Run-Actions {
     if ($LASTEXITCODE -ne 0) { throw 'Action Scheduler execution failed.' }
 }
 
+function Initialize-CatalogSeed {
+    & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\bootstrap-catalog.php') | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Initial catalog seed bootstrap failed.' }
+}
+
 powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'wordpress-runtime.ps1') start | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'WordPress runtime did not start.' }
 
@@ -38,6 +43,7 @@ if (-not $isActive) {
     & $php $wp --path=$site --skip-themes plugin activate starfiniti-search | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Starfiniti Search activation failed.' }
 }
+Initialize-CatalogSeed
 Run-Actions
 
 & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\schema-upgrade-v9-v10.php') | Out-Null
