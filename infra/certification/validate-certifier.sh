@@ -2,7 +2,9 @@
 set -Eeuo pipefail
 
 work_dir="${1:-/tmp/starfiniti-typesense-certifier-validation}"
-certifier="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/certify_typesense.py}"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+certifier="${2:-$script_dir/certify_typesense.py}"
+runtime_lock="${3:-$script_dir/../runtime-lock.json}"
 server_pid=""
 
 [[ "$work_dir" == /tmp/starfiniti-typesense-certifier-validation ]] || {
@@ -11,6 +13,16 @@ server_pid=""
 }
 [[ -r "$certifier" ]] || {
   printf 'certifier is not readable: %s\n' "$certifier" >&2
+  exit 1
+}
+[[ -r "$runtime_lock" ]] || {
+  printf 'runtime lock is not readable: %s\n' "$runtime_lock" >&2
+  exit 1
+}
+
+expected_binary_sha256="$(jq -er '.images.typesense.validation_binary_sha256' "$runtime_lock")"
+[[ "$expected_binary_sha256" =~ ^[a-f0-9]{64}$ ]] || {
+  printf 'runtime lock contains an invalid Typesense validation digest\n' >&2
   exit 1
 }
 
@@ -28,7 +40,11 @@ install -d -m 0700 "$work_dir/data" "$work_dir/logs"
 curl --fail --silent --show-error --location \
   https://dl.typesense.org/releases/30.2/typesense-server-30.2-linux-amd64.tar.gz \
   --output "$work_dir/typesense.tar.gz"
-sha256sum "$work_dir/typesense.tar.gz"
+printf '%s  %s\n' "$expected_binary_sha256" "$work_dir/typesense.tar.gz" |
+  sha256sum --check --status || {
+  printf 'Typesense validation archive does not match the runtime lock\n' >&2
+  exit 1
+}
 
 python3 - "$work_dir/typesense.tar.gz" "$work_dir" <<'PY'
 import pathlib
@@ -76,6 +92,8 @@ curl --fail --silent http://127.0.0.1:18108/health >/dev/null
 python3 "$certifier" \
   --url http://127.0.0.1:18108 \
   --admin-key-file "$work_dir/admin-key" \
+  --artifact-kind standalone-binary \
+  --artifact-digest "sha256:$expected_binary_sha256" \
   --output "$work_dir/evidence.json"
 jq -e '.status == "passed" and (.cleanup_errors | length == 0)' "$work_dir/evidence.json" >/dev/null
 

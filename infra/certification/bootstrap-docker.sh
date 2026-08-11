@@ -20,12 +20,31 @@ docker_ce_version='5:29.7.2-1~ubuntu.24.04~noble'
 containerd_version='2.3.3-1~ubuntu.24.04~noble'
 buildx_version='0.36.1-1~ubuntu.24.04~noble'
 compose_version='5.4.0-1~ubuntu.24.04~noble'
+docker_signing_key_fingerprint='9DC858229FC7DD38854AE2D88D81803C0EBFCD88'
+
+key_dir="$(mktemp -d /tmp/starfiniti-docker-key.XXXXXX)"
+key_file="$key_dir/docker.asc"
+cleanup() {
+  [[ "$key_dir" == /tmp/starfiniti-docker-key.* ]] && rm -rf -- "$key_dir"
+}
+trap cleanup EXIT
+
+apt-get update
+env DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg
 
 install -d -m 0755 /etc/apt/keyrings
 curl --fail --silent --show-error --location \
   https://download.docker.com/linux/ubuntu/gpg \
-  --output /etc/apt/keyrings/docker.asc
-chmod 0644 /etc/apt/keyrings/docker.asc
+  --output "$key_file"
+
+key_fingerprints="$(
+  gpg --batch --homedir "$key_dir/gnupg" --show-keys --with-colons "$key_file" |
+    awk -F: '$1 == "fpr" { print $10 }'
+)"
+grep -Fxq "$docker_signing_key_fingerprint" <<<"$key_fingerprints" ||
+  fail "Docker signing-key fingerprint does not match the runtime lock"
+
+install -m 0644 "$key_file" /etc/apt/keyrings/docker.asc
 
 printf '%s\n' \
   'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable' \

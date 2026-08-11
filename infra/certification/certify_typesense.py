@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import secrets
 import stat
 import sys
@@ -64,6 +65,8 @@ class TypesenseClient:
         )
 
         try:
+            # base_url is constrained by loopback_url before this client is created.
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 status_code = response.status
                 body_bytes = response.read()
@@ -91,6 +94,21 @@ class TypesenseClient:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise CertificationError(message)
+
+
+def sha256_digest(value: str) -> str:
+    if not re.fullmatch(r"sha256:[a-f0-9]{64}", value):
+        raise argparse.ArgumentTypeError("artifact digest must be sha256 followed by 64 lowercase hexadecimal characters")
+    return value
+
+
+def loopback_url(value: str) -> str:
+    parsed = urllib.parse.urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in {"127.0.0.1", "::1", "localhost"}:
+        raise argparse.ArgumentTypeError("certification URL must use HTTP(S) on loopback")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise argparse.ArgumentTypeError("certification URL must not contain credentials, a query, or a fragment")
+    return value.rstrip("/")
 
 
 def read_secret(path: Path) -> str:
@@ -169,29 +187,32 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         debug = admin.request("GET", "/debug").body
         require(isinstance(debug, dict), "debug endpoint did not return an object")
         server_version = str(debug.get("version", ""))
-        require(server_version.startswith(args.expected_version), f"expected Typesense {args.expected_version}, got {server_version!r}")
+        require(server_version == args.expected_version, f"expected Typesense {args.expected_version}, got {server_version!r}")
         passed("exact_server_version")
 
         search_key = create_key(admin, f"cert search {suffix}", ["documents:search"], [collection_a])
+        created_keys.append(search_key["id"])
         index_key = create_key(
             admin,
             f"cert indexing {suffix}",
             ["collections:get", "documents:import", "documents:upsert", "documents:delete"],
             [collection_a, collection_b],
         )
+        created_keys.append(index_key["id"])
         provision_key = create_key(
             admin,
             f"cert provisioning {suffix}",
             ["collections:*", "aliases:*"],
             [collection_a, collection_b],
         )
+        created_keys.append(provision_key["id"])
         relevance_key = create_key(
             admin,
             f"cert relevance {suffix}",
             ["synonym_sets:*", "synonym_sets/items:*", "curation_sets:*", "curation_sets/items:*"],
             ["*"],
         )
-        created_keys.extend([search_key["id"], index_key["id"], provision_key["id"], relevance_key["id"]])
+        created_keys.append(relevance_key["id"])
         passed("separate_least_privilege_keys_created")
 
         search = TypesenseClient(args.url, search_key["value"], args.timeout)
@@ -287,7 +308,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "server_version": server_version,
             "expected_version": args.expected_version,
-            "image_digest": args.image_digest,
+            "artifact": {
+                "kind": args.artifact_kind,
+                "digest": args.artifact_digest,
+            },
             "platform": {"system": platform.system(), "release": platform.release(), "machine": platform.machine()},
             "tests": tests,
             "cleanup_errors": cleanup_errors,
@@ -316,11 +340,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", default="http://127.0.0.1:8108")
+    parser.add_argument("--url", type=loopback_url, default="http://127.0.0.1:8108")
     parser.add_argument("--admin-key-file", type=Path, required=True)
     parser.add_argument("--expected-version", default="30.2")
     parser.add_argument(
-        "--image-digest",
+        "--artifact-kind",
+        choices=("container-image", "standalone-binary"),
+        default="container-image",
+    )
+    parser.add_argument(
+        "--artifact-digest",
+        type=sha256_digest,
         default="sha256:610f2d34b1f93d00762869da2c67736775e5798d19a2c8b91b014b8a0cc1e110",
     )
     parser.add_argument("--timeout", type=float, default=10.0)

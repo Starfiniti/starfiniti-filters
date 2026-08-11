@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -15,6 +16,10 @@ function requireCondition(condition, message) {
 
 const lock = JSON.parse(read('infra/runtime-lock.json'));
 requireCondition(lock.platform === 'linux/amd64', 'runtime lock must target linux/amd64');
+requireCondition(
+  /^[A-F0-9]{40}$/.test(lock.docker.signing_key_fingerprint),
+  'Docker signing-key fingerprint is invalid',
+);
 
 const digestPattern = /^sha256:[a-f0-9]{64}$/;
 for (const [name, image] of Object.entries(lock.images)) {
@@ -67,6 +72,29 @@ requireCondition(
 requireCondition(typesenseCompose.includes('mem_limit: 3g'), 'Typesense memory cap changed');
 requireCondition(typesenseCompose.includes('cap_drop:\n      - ALL'), 'Typesense capabilities are not dropped');
 
+const dockerBootstrap = read('infra/certification/bootstrap-docker.sh');
+requireCondition(
+  dockerBootstrap.includes(`docker_signing_key_fingerprint='${lock.docker.signing_key_fingerprint}'`),
+  'Docker bootstrap fingerprint differs from runtime-lock.json',
+);
+requireCondition(
+  dockerBootstrap.includes('gpg --batch --homedir'),
+  'Docker bootstrap does not verify the signing key in an isolated keyring',
+);
+
+const certifierValidation = read('infra/certification/validate-certifier.sh');
+for (const requiredFragment of [
+  'validation_binary_sha256',
+  'sha256sum --check --status',
+  '--artifact-kind standalone-binary',
+  '--artifact-digest "sha256:$expected_binary_sha256"',
+]) {
+  requireCondition(
+    certifierValidation.includes(requiredFragment),
+    `Typesense validator trust fragment missing: ${requiredFragment}`,
+  );
+}
+
 const observabilityCompose = read('infra/observability/compose.yaml');
 for (const loopbackPort of ['"127.0.0.1:9090:9090"', '"127.0.0.1:3000:3000"']) {
   requireCondition(observabilityCompose.includes(loopbackPort), `${loopbackPort} is not loopback-only`);
@@ -75,6 +103,27 @@ requireCondition(
   observabilityCompose.includes('"10.10.10.61:3100:3100"'),
   'Loki must bind to the exact private ops address',
 );
+requireCondition(
+  /prometheus:[\s\S]*?networks: \[observability, monitoring_egress\]/.test(observabilityCompose),
+  'Prometheus must have the dedicated monitoring egress network',
+);
+requireCondition(
+  /monitoring_egress:\s*\n\s+driver: bridge/.test(observabilityCompose),
+  'monitoring egress network is missing or isolated',
+);
+
+const ingressFirewall = read('infra/observability/starfiniti-docker-ingress-firewall');
+for (const requiredFragment of [
+  'iptables -I DOCKER-USER 1 "${drop_rule[@]}"',
+  'iptables -I DOCKER-USER 1 "${allow_rule[@]}"',
+  'configuration mode must be 0600',
+  'ufw allow in on',
+]) {
+  requireCondition(
+    ingressFirewall.includes(requiredFragment),
+    `Docker ingress firewall fragment missing: ${requiredFragment}`,
+  );
+}
 
 const memoryValues = [...observabilityCompose.matchAll(/^\s+mem_limit:\s+(\d+)m\s*$/gm)].map(
   (match) => Number.parseInt(match[1], 10),
@@ -108,6 +157,19 @@ const certifier = read('infra/certification/certify_typesense.py');
 for (const cleanupPath of ['/aliases/', '/synonym_sets/', '/curation_sets/', '/collections/', '/keys/']) {
   requireCondition(certifier.includes(cleanupPath), `certifier cleanup path missing: ${cleanupPath}`);
 }
+requireCondition(certifier.includes('"artifact": {'), 'certifier evidence does not identify its artifact');
+requireCondition(!certifier.includes('"image_digest"'), 'certifier still emits an ambiguous image digest');
+
+const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+const cleanupRegression = spawnSync(
+  pythonCommand,
+  [resolve(root, 'infra/certification/test-certifier-cleanup.py')],
+  { encoding: 'utf8' },
+);
+requireCondition(
+  cleanupRegression.status === 0,
+  `Typesense partial-key cleanup regression failed: ${cleanupRegression.stderr || cleanupRegression.stdout}`,
+);
 
 console.log(
   JSON.stringify({

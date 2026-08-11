@@ -24,7 +24,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
-    networks: [observability]
+    networks: [observability, monitoring_egress]
     logging: &bounded_logging
       driver: json-file
       options:
@@ -127,6 +127,8 @@ services:
 networks:
   observability:
     internal: true
+  monitoring_egress:
+    driver: bridge
 
 volumes:
   prometheus_data:

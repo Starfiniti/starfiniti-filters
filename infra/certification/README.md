@@ -8,6 +8,11 @@ bootstrap key, or admin API is exposed on `vmbr10` or the Internet.
 Linux/amd64 child digest. The Compose file uses the manifest digest, so a tag move
 cannot silently change the certified image.
 
+`validate-certifier.sh` is a harness test, not container-image evidence. It
+refuses to extract or execute its standalone Typesense archive unless the bytes
+match `validation_binary_sha256`, and records that binary digest and artifact
+kind in its temporary evidence.
+
 ## Deployment gate
 
 Do not run the workload until the encrypted Storage Box repository has produced a
