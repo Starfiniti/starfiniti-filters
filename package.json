@@ -37,7 +37,7 @@
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-plugin.ps1",
     "qualify:artifact": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/qualify-artifact.ps1",
     "test": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-node.ps1 tools/audit-upstreams.mjs --check && pnpm verify:requirements && pnpm verify:architecture && pnpm verify:infra && pnpm test:php && pnpm test:mcp",
-    "test:all": "pnpm test && pnpm verify:storefront && pnpm verify:contracts && pnpm test:integration && pnpm test:lifecycle && pnpm test:process-kill && pnpm test:builder-kill && pnpm test:disaster-recovery && pnpm verify:release"
+    "test:all": "pnpm test && pnpm verify:storefront && pnpm test:integration && pnpm verify:contracts && pnpm test:lifecycle && pnpm test:process-kill && pnpm test:builder-kill && pnpm test:disaster-recovery && pnpm verify:release"
   },
   "engines": {
     "node": ">=20"
