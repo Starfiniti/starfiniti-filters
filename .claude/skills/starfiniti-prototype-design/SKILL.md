@@ -1,10 +1,10 @@
 ---
 name: starfiniti-prototype-design
-description: Design or review Starfiniti Search prototypes that must work with the WooCommerce plugin. Use for autocomplete, discovery, mobile, administration, relevance, analytics, Figma, image, HTML, or written UX prototype work.
+description: Backward-compatible alias for reviewing Starfiniti Search prototypes. Use when an existing workflow invokes starfiniti-prototype-design; apply the canonical customer assistant's prototype route.
 ---
 
-# Starfiniti Prototype Design for Claude
+# Starfiniti Prototype Design compatibility alias
 
-Read and follow the canonical repository skill at `../../../.agents/skills/starfiniti-prototype-design/SKILL.md`. Resolve all of its relative references from `.agents/skills/starfiniti-prototype-design/`.
+Read and follow the `prototype` route in `../../../plugin/starfiniti-search/ai/starfiniti-search-assistant/SKILL.md` and its `references/prototype-compatibility.md`. Resolve all relative references from `plugin/starfiniti-search/ai/starfiniti-search-assistant/`.
 
-Do not create a separate Claude interpretation of the contract. The `.agents` skill, its compatibility reference, manifest template, and validator are the single source of truth.
+Do not create a separate Claude interpretation of the contract.

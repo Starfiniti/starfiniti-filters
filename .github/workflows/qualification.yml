@@ -54,6 +54,7 @@ jobs:
           name: starfiniti-search-qualification
           path: |
             dist/starfiniti-search.zip
+            dist/starfiniti-search-ai-skill-*.zip
             dist/starfiniti-search.cdx.json
             dist/release-manifest.json
           if-no-files-found: error

@@ -1,5 +1,6 @@
 {
   "contract_version": "1.0",
+  "plugin_version": "0.3.0-alpha.1",
   "prototype": {
     "name": "Starfiniti storefront baseline",
     "implementation_target": "current",

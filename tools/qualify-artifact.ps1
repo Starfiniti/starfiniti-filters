@@ -12,6 +12,10 @@ $site = Join-Path $runtimeRoot 'sites\starfiniti-search\wordpress'
 $archivePath = Join-Path $repoRoot 'dist\starfiniti-search.zip'
 $sbomPath = Join-Path $repoRoot 'dist\starfiniti-search.cdx.json'
 $manifestPath = Join-Path $repoRoot 'dist\release-manifest.json'
+$mainHeader = Get-Content (Join-Path $repoRoot 'plugin\starfiniti-search\starfiniti-search.php') -Raw
+$versionMatch = [regex]::Match($mainHeader, '(?mi)^\s*\*\s*Version:\s*([^\r\n]+)')
+if (-not $versionMatch.Success) { throw 'Plugin version header is missing.' }
+$skillArchivePath = Join-Path $repoRoot "dist\starfiniti-search-ai-skill-$($versionMatch.Groups[1].Value.Trim()).zip"
 $installed = Join-Path $site 'wp-content\plugins\starfiniti-search'
 $nodeFallback = 'C:\Users\dejan\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
 $node = if (Get-Command node -ErrorAction SilentlyContinue) { (Get-Command node).Source } elseif (Test-Path $nodeFallback) { $nodeFallback } else { throw 'Node.js is required.' }
@@ -25,7 +29,37 @@ function Build-Artifact {
         zip = (Get-StarfinitiFileHash -LiteralPath $archivePath -Algorithm SHA256).Hash
         sbom = (Get-StarfinitiFileHash -LiteralPath $sbomPath -Algorithm SHA256).Hash
         manifest = (Get-StarfinitiFileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash
+        skill = (Get-StarfinitiFileHash -LiteralPath $skillArchivePath -Algorithm SHA256).Hash
     }
+}
+
+function Assert-SkillArtifact {
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $skillInstalled = Join-Path $installed 'ai\starfiniti-search-assistant'
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($skillArchivePath)
+    try {
+        $entries = @($archive.Entries | Where-Object { -not [string]::IsNullOrEmpty($_.Name) })
+        $installedFiles = @(Get-ChildItem -LiteralPath $skillInstalled -Recurse -File)
+        if ($entries.Count -ne $installedFiles.Count) {
+            throw "Customer skill file count mismatch: archive=$($entries.Count), installed=$($installedFiles.Count)."
+        }
+        foreach ($entry in $entries) {
+            if (-not $entry.FullName.StartsWith('starfiniti-search-assistant/')) { throw "Unexpected customer skill entry: $($entry.FullName)" }
+            $relative = $entry.FullName.Substring('starfiniti-search-assistant/'.Length).Replace('/', [IO.Path]::DirectorySeparatorChar)
+            $path = Join-Path $skillInstalled $relative
+            if (-not (Test-Path -LiteralPath $path)) { throw "Installed customer skill file is missing: $relative" }
+            $stream = $entry.Open()
+            try {
+                $hasher = [Security.Cryptography.SHA256]::Create()
+                try { $archiveHash = ([BitConverter]::ToString($hasher.ComputeHash($stream))).Replace('-', '') } finally { $hasher.Dispose() }
+            } finally { $stream.Dispose() }
+            if ($archiveHash -ne (Get-StarfinitiFileHash -LiteralPath $path -Algorithm SHA256).Hash) {
+                throw "Installed customer skill differs from the companion archive: $relative"
+            }
+        }
+        return $entries.Count
+    } finally { $archive.Dispose() }
 }
 
 function Assert-InstalledArtifact {
@@ -60,7 +94,7 @@ if ($LASTEXITCODE -ne 0) { throw 'WordPress runtime did not start.' }
 
 $first = Build-Artifact
 $second = Build-Artifact
-foreach ($name in @('zip', 'sbom', 'manifest')) {
+foreach ($name in @('zip', 'skill', 'sbom', 'manifest')) {
     if ($first[$name] -ne $second[$name]) { throw "Reproducibility failed for $name." }
 }
 
@@ -69,6 +103,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Exact ZIP installation failed.' }
 & $php $wp --path=$site plugin activate starfiniti-search | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Installed plugin activation failed.' }
 $fileCount = Assert-InstalledArtifact
+$skillFileCount = Assert-SkillArtifact
 
 $pluginCheckCli = Join-Path $site 'wp-content\plugins\plugin-check\cli.php'
 if (-not (Test-Path -LiteralPath $pluginCheckCli)) { throw 'Pinned official Plugin Check is missing; run wordpress:setup.' }
@@ -98,4 +133,4 @@ if ($exact.hits[0].projection.identity.title -ne 'Blue Alpine Shirt' -or $restri
     throw 'Installed public exact-SKU, visibility, or discovery smoke failed.'
 }
 
-Write-Output "Artifact qualification passed: $fileCount files; ZIP $($second.zip); SBOM $($second.sbom); manifest $($second.manifest)."
+Write-Output "Artifact qualification passed: $fileCount plugin files and $skillFileCount customer skill files; ZIP $($second.zip); skill $($second.skill); SBOM $($second.sbom); manifest $($second.manifest)."

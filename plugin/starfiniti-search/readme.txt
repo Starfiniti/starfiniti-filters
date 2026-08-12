@@ -16,6 +16,8 @@ Starfiniti Search builds a dedicated, versioned inverted index from a canonical 
 
 The local provider supports exact SKU, Unicode/accent-aware prefix and phrase search, bounded typo and synonym recovery, locale-specific stop words, visibility-safe pins/boosts/buries/hides and internal redirects, safe text highlights, bounded filters and facets, shadow rebuilds, atomic cutover, rollback, immutable configuration history and draft relevance preview, a fail-closed 12-step setup readiness assessment, and accessible search and discovery blocks. External providers remain disabled until their real-service qualification passes.
 
+The plugin includes an optional, version-matched Starfiniti Search Assistant skill for Claude Code and Codex. It provides guidance for setup, troubleshooting, storefront placement, and compatible prototype design. The skill does not connect to or modify a WordPress site and must never be given credentials, customer data, database dumps, private catalog exports, or unredacted logs.
+
 This alpha is a qualification build. It is not yet a production release.
 
 == Changelog ==
@@ -32,6 +34,7 @@ Qualification also includes leased shadow-builder and outbox-worker process term
 2. Install and activate Starfiniti Search.
 3. Review the 12-step evidence-backed setup readiness assessment, then use WP-CLI or the administration screen to start the initial index build.
 4. Place the Search, Navigation Search, or Discovery block; the classic Starfiniti Search widget; a shortcode; or the documented PHP template API.
+5. Optional: copy `ai/starfiniti-search-assistant` from the installed plugin or the matching companion release ZIP to `~/.agents/skills/` for Codex or `~/.claude/skills/` for Claude Code.
 
 == Privacy ==
 

@@ -22,6 +22,8 @@ Read these files in order:
 
 Treat the specification pack as binding. Preserve the independent domain layer, canonical contracts, visibility invariants, immutable operation model, and provider-neutral storefront boundary.
 
+For customer setup, troubleshooting, storefront, prototype, relevance, analytics, or capability guidance, use `.agents/skills/starfiniti-search-assistant/SKILL.md`. The packaged skill under `plugin/starfiniti-search/ai/starfiniti-search-assistant/` is canonical. `starfiniti-prototype-design` is a compatibility alias only.
+
 For storefront, administration, Figma, UX, visual design, or prototype work, read and use `.agents/skills/starfiniti-prototype-design/SKILL.md`. Validate a prototype compatibility manifest before claiming that a design maps to the plugin. Claude uses the thin discovery wrapper in `.claude/skills/starfiniti-prototype-design/`, which points to the same canonical skill.
 
 ## Current repository and Git state
