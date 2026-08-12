@@ -22,6 +22,8 @@ Read these files in order:
 
 Treat the specification pack as binding. Preserve the independent domain layer, canonical contracts, visibility invariants, immutable operation model, and provider-neutral storefront boundary.
 
+For storefront, administration, Figma, UX, visual design, or prototype work, read and use `.agents/skills/starfiniti-prototype-design/SKILL.md`. Validate a prototype compatibility manifest before claiming that a design maps to the plugin. Claude uses the thin discovery wrapper in `.claude/skills/starfiniti-prototype-design/`, which points to the same canonical skill.
+
 ## Current repository and Git state
 
 The qualification implementation was first published to `https://github.com/Starfiniti/starfiniti-filters.git` on branch `main` on 2026-08-10. Verify the current local and remote state before changing anything; do not assume later local work was pushed.

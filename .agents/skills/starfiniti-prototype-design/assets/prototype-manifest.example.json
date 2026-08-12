@@ -1,0 +1,48 @@
+{
+  "contract_version": "1.0",
+  "prototype": {
+    "name": "Starfiniti storefront baseline",
+    "implementation_target": "current",
+    "source": "figma-or-prototype-url"
+  },
+  "surfaces": ["autocomplete", "discovery", "mobile-overlay"],
+  "invariants": {
+    "provider_neutral_storefront": true,
+    "canonical_contracts": true,
+    "server_authoritative_visibility": true,
+    "untrusted_data_text_only": true,
+    "shared_renderer": true,
+    "normal_search_fallback": true,
+    "multiple_instances_unique_ids": true
+  },
+  "states": {
+    "autocomplete": ["idle", "focused_empty", "debouncing", "loading", "success", "no_results", "degraded", "error", "closed"],
+    "discovery": ["loading", "success", "no_results", "error"],
+    "mobile-overlay": ["open", "closed"]
+  },
+  "interactions": {
+    "autocomplete": ["normal-form-submit", "abort-previous-request", "ignore-late-response", "ime-composition", "arrow-navigation", "home-end-navigation", "escape-close", "enter-activate", "tab-exit-inline", "live-region-status"],
+    "discovery": ["submit-query", "filter-stock", "filter-category", "sort", "clear-filters", "previous-page", "next-page", "url-state", "browser-back", "details-disclosure", "failed-image-recovery"],
+    "mobile-overlay": ["single-active-overlay", "visible-close", "focus-containment", "escape-close", "restore-opener-focus", "lock-and-restore-scroll", "preserve-query"]
+  },
+  "viewports": [
+    {"width": 360, "height": 800, "mode": "mobile-overlay"},
+    {"width": 1440, "height": 1000, "mode": "desktop"}
+  ],
+  "bindings": [
+    {"component": "autocomplete-title", "source": "hits[].projection.identity.title", "render": "text"},
+    {"component": "autocomplete-link", "source": "hits[].projection.identity.url", "render": "url"},
+    {"component": "product-price", "source": "hits[].projection.pricing.active_min_minor", "render": "minor-units"},
+    {"component": "product-stock", "source": "hits[].projection.inventory.stock_status", "render": "text"},
+    {"component": "product-image", "source": "hits[].projection.media.thumbnail_url", "render": "url"},
+    {"component": "category-facets", "source": "facets.classification.category_paths", "render": "text"}
+  ],
+  "features": {
+    "current": ["product-title-autocomplete", "stock-category-filters", "bounded-pagination", "details-disclosure"],
+    "planned": []
+  },
+  "claims": {
+    "certified_integrations": ["theme-twentytwentyfive"],
+    "pending_qualification": ["real-mobile-keyboard", "zoom-200-400", "broad-theme-matrix"]
+  }
+}

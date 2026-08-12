@@ -1,0 +1,4 @@
+interface:
+  display_name: "Starfiniti Prototype Design"
+  short_description: "Design plugin-compatible Starfiniti prototypes"
+  default_prompt: "Use $starfiniti-prototype-design to design or review a prototype that maps safely to the Starfiniti Search plugin."
