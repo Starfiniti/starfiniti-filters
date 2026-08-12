@@ -1,0 +1,46 @@
+name: starfiniti-search-cert-agent
+
+services:
+  node-exporter:
+    image: prom/node-exporter@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    cpus: 0.10
+    mem_limit: 96m
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/host/root
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|host|etc)($$|/)
+    ports:
+      - "10.10.10.60:9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+    logging: &bounded_logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  alloy:
+    image: grafana/alloy@sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    cpus: 0.15
+    mem_limit: 128m
+    command: [run, /etc/alloy/config.alloy]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+      - /var/lib/alloy:rw,noexec,nosuid,nodev,size=64m
+    volumes:
+      - ./cert-alloy.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    logging: *bounded_logging

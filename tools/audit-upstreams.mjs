@@ -7,6 +7,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const configurationPath = path.join(repositoryRoot, 'config', 'upstreams.json');
 const outputPath = path.join(repositoryRoot, 'audit', 'generated', 'upstream-manifest.json');
 const checkOnly = process.argv.includes('--check');
+const recordedOnly = process.env.STARFINITI_UPSTREAM_AUDIT_MODE === 'recorded';
 
 function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex').toUpperCase();
@@ -57,10 +58,78 @@ async function auditTree(sourceRoot) {
   };
 }
 
+function validateRecordedManifest(configuration, manifest) {
+  const failures = [];
+  if (!checkOnly) {
+    failures.push('recorded upstream audit mode is valid only with --check');
+  }
+  if (manifest.schemaVersion !== 1 || manifest.deterministic !== true || !Array.isArray(manifest.upstreams)) {
+    failures.push('recorded upstream manifest has an invalid envelope');
+    return failures;
+  }
+  if (manifest.upstreams.length !== configuration.upstreams.length) {
+    failures.push('recorded upstream manifest count differs from config/upstreams.json');
+  }
+
+  for (const upstream of configuration.upstreams) {
+    const recorded = manifest.upstreams.find((candidate) => candidate.id === upstream.id);
+    if (!recorded) {
+      failures.push(`${upstream.id}: missing from recorded upstream manifest`);
+      continue;
+    }
+    for (const field of ['name', 'version', 'role', 'package', 'sourceRoot', 'declaredLicense']) {
+      if (recorded[field] !== upstream[field]) {
+        failures.push(`${upstream.id}: recorded ${field} differs from config/upstreams.json`);
+      }
+    }
+    if (recorded.packageSha256 !== upstream.sha256.toUpperCase()) {
+      failures.push(`${upstream.id}: recorded package SHA-256 differs from config/upstreams.json`);
+    }
+    if (
+      !recorded.source ||
+      !Number.isInteger(recorded.source.fileCount) ||
+      recorded.source.fileCount < 1 ||
+      !Number.isInteger(recorded.source.totalBytes) ||
+      recorded.source.totalBytes < 1 ||
+      !/^[A-F0-9]{64}$/.test(recorded.source.treeSha256 ?? '') ||
+      !recorded.source.extensions ||
+      typeof recorded.source.extensions !== 'object'
+    ) {
+      failures.push(`${upstream.id}: recorded source evidence is incomplete`);
+    }
+  }
+
+  return failures;
+}
+
 async function main() {
   const configuration = JSON.parse(await readFile(configurationPath, 'utf8'));
   const results = [];
   const failures = [];
+
+  if (recordedOnly) {
+    let manifest;
+    try {
+      manifest = JSON.parse(await readFile(outputPath, 'utf8'));
+    } catch {
+      console.error('AUDIT FAILURE: audit/generated/upstream-manifest.json is missing or invalid');
+      process.exitCode = 1;
+      return;
+    }
+    const recordedFailures = validateRecordedManifest(configuration, manifest);
+    if (recordedFailures.length > 0) {
+      for (const failure of recordedFailures) {
+        console.error(`AUDIT FAILURE: ${failure}`);
+      }
+      process.exitCode = 1;
+      return;
+    }
+    for (const result of manifest.upstreams) {
+      console.log(`${result.id}: recorded ${result.packageSha256} (${result.source.fileCount} files, tree ${result.source.treeSha256})`);
+    }
+    console.log('Recorded upstream manifest is consistent; proprietary and ignored source bytes were not re-audited.');
+    return;
+  }
 
   for (const upstream of configuration.upstreams) {
     const packagePath = path.join(repositoryRoot, ...upstream.package.split('/'));
@@ -121,4 +190,3 @@ async function main() {
 }
 
 await main();
-

@@ -15,3 +15,6 @@ tests/php/unit/MoneyTest.php whitespace=-blank-at-eof
 tools/audit-upstreams.mjs whitespace=-blank-at-eof
 tools/fibofilters-baseline.ps1 whitespace=-blank-at-eof
 tools/test-php.ps1 whitespace=-blank-at-eof
+
+# Deterministic manifests and verification inputs must keep repository LF bytes on Windows.
+* text=auto eol=lf

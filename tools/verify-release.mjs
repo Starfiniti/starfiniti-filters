@@ -53,6 +53,16 @@ for (const relative of files) {
 }
 
 if (!files.includes('LICENSE') || !files.includes('readme.txt')) failures.push('plugin package must contain LICENSE and readme.txt');
+for (const requiredSkillFile of [
+  'ai/starfiniti-search-assistant/SKILL.md',
+  'ai/starfiniti-search-assistant/agents/openai.yaml',
+  'ai/starfiniti-search-assistant/assets/diagnostic-intake.md',
+  'ai/starfiniti-search-assistant/assets/prototype-manifest.example.json',
+  'ai/starfiniti-search-assistant/references/current-capabilities.md',
+  'ai/starfiniti-search-assistant/references/prototype-compatibility.md',
+  'ai/starfiniti-search-assistant/references/setup-and-troubleshooting.md',
+  'ai/starfiniti-search-assistant/scripts/validate-prototype.mjs',
+]) if (!files.includes(requiredSkillFile)) failures.push(`plugin package must contain ${requiredSkillFile}`);
 const mainHeader = await readFile(path.join(plugin, 'starfiniti-search.php'), 'utf8');
 const readme = await readFile(path.join(plugin, 'readme.txt'), 'utf8');
 const field = (source, label) => source.match(new RegExp(`^\\s*(?:\\*\\s*)?${label}:\\s*(.+?)\\s*$`, 'mi'))?.[1] || '';
@@ -63,10 +73,13 @@ const readmePhp = field(readme, 'Requires PHP');
 const mainWordPress = field(mainHeader, 'Requires at least');
 const readmeWordPress = field(readme, 'Requires at least');
 const wooFloor = field(mainHeader, 'WC requires at least');
+const customerSkill = await readFile(path.join(plugin, 'ai', 'starfiniti-search-assistant', 'SKILL.md'), 'utf8');
+const customerManifest = JSON.parse(await readFile(path.join(plugin, 'ai', 'starfiniti-search-assistant', 'assets', 'prototype-manifest.example.json'), 'utf8'));
 if (!mainVersion || mainVersion !== stableTag) failures.push('plugin Version and readme Stable tag must match');
 if (mainPhp !== '8.2' || readmePhp !== mainPhp) failures.push('PHP metadata floor must consistently declare 8.2');
 if (mainWordPress !== '6.7' || readmeWordPress !== mainWordPress) failures.push('WordPress metadata floor must consistently declare 6.7');
 if (wooFloor !== '9.0') failures.push('WooCommerce metadata floor must declare 9.0');
+if (!customerSkill.includes(`plugin-version: "${mainVersion}"`) || customerManifest.plugin_version !== mainVersion) failures.push('customer skill version must match the plugin Version');
 if (failures.length > 0) {
   failures.forEach((failure) => console.error(`RELEASE FAILURE: ${failure}`));
   process.exitCode = 1;

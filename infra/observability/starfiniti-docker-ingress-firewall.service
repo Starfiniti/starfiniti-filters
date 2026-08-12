@@ -1,0 +1,14 @@
+[Unit]
+Description=Restrict Starfiniti Docker-published private ingress
+Requires=docker.service
+After=docker.service ufw.service
+Before=starfiniti-observability.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/starfiniti-docker-ingress-firewall --apply
+ExecReload=/usr/local/sbin/starfiniti-docker-ingress-firewall --apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

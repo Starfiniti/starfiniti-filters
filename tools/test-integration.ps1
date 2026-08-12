@@ -18,8 +18,25 @@ function Search([string] $Query) {
 }
 
 function Run-Actions {
-    & $php $wp --path=$site action-scheduler run --group=starfiniti-search --batch-size=100 --batches=10 --force | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Action Scheduler execution failed.' }
+    $pending = (& $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\action-scheduler-pending.php')).Trim()
+    if ($LASTEXITCODE -ne 0 -or $pending -notmatch '^\d+$') { throw 'Action Scheduler pending-work inspection failed.' }
+    if ([int] $pending -eq 0) { return }
+    # Scope the runner by the plugin's complete scheduled-hook allowlist instead of
+    # by group. On a fresh site, another WordPress request can drain the final
+    # action after the inspection above; Action Scheduler then removes/does not
+    # resolve the now-empty group and its CLI rejects --group even though no work
+    # failed. Hook scoping preserves isolation without that group-existence race.
+    $hooks = 'starfiniti_search_build_generation,starfiniti_search_process_outbox,starfiniti_search_reconcile_catalog,starfiniti_search_reconcile_stale,starfiniti_search_seed_catalog'
+    & $php $wp --path=$site action-scheduler run --hooks=$hooks --batch-size=100 --batches=10 --force | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        $remaining = (& $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\action-scheduler-pending.php')).Trim()
+        if ($LASTEXITCODE -ne 0 -or $remaining -notmatch '^\d+$' -or [int] $remaining -ne 0) { throw 'Action Scheduler execution failed.' }
+    }
+}
+
+function Initialize-CatalogSeed {
+    & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\bootstrap-catalog.php') | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Initial catalog seed bootstrap failed.' }
 }
 
 powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'wordpress-runtime.ps1') start | Out-Null
@@ -38,6 +55,7 @@ if (-not $isActive) {
     & $php $wp --path=$site --skip-themes plugin activate starfiniti-search | Out-Null
     if ($LASTEXITCODE -ne 0) { throw 'Starfiniti Search activation failed.' }
 }
+Initialize-CatalogSeed
 Run-Actions
 
 & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\schema-upgrade-v9-v10.php') | Out-Null

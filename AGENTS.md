@@ -22,6 +22,10 @@ Read these files in order:
 
 Treat the specification pack as binding. Preserve the independent domain layer, canonical contracts, visibility invariants, immutable operation model, and provider-neutral storefront boundary.
 
+For customer setup, troubleshooting, storefront, prototype, relevance, analytics, or capability guidance, use `.agents/skills/starfiniti-search-assistant/SKILL.md`. The packaged skill under `plugin/starfiniti-search/ai/starfiniti-search-assistant/` is canonical. `starfiniti-prototype-design` is a compatibility alias only.
+
+For storefront, administration, Figma, UX, visual design, or prototype work, read and use `.agents/skills/starfiniti-prototype-design/SKILL.md`. Validate a prototype compatibility manifest before claiming that a design maps to the plugin. Claude uses the thin discovery wrapper in `.claude/skills/starfiniti-prototype-design/`, which points to the same canonical skill.
+
 ## Current repository and Git state
 
 The qualification implementation was first published to `https://github.com/Starfiniti/starfiniti-filters.git` on branch `main` on 2026-08-10. Verify the current local and remote state before changing anything; do not assume later local work was pushed.
@@ -48,6 +52,7 @@ Run the narrowest relevant checks during development, then the complete gates be
 
 ```powershell
 pnpm install --frozen-lockfile
+pnpm verify:infra
 pnpm test
 pnpm test:all
 pnpm test:mcp:live
@@ -78,7 +83,7 @@ Then run `pnpm verify:requirements`. Do not mark externally dependent work compl
 
 Start every server session with read-only inventory. Identify the host, OS, existing workloads, firewall, reverse proxy, container runtime, backups, DNS provider, and reserved IP before modifying anything. Do not delete, replace, or expose existing services without explicit confirmation of the target.
 
-The current MCP application supports trusted local stdio only. Do not expose it directly to the Internet. Remote deployment remains incomplete until Streamable HTTP, TLS, OAuth protected-resource metadata, authorization-server discovery, PKCE where applicable, cryptographic JWT/JWKS verification, exact issuer/audience validation, short token lifetimes, revocation, tenant binding, separate health/readiness, and deployment observability are implemented and tested. Caller tokens must never be forwarded to WordPress.
+The MCP application supports trusted local stdio and a modern-only Streamable HTTP resource-server implementation. Do not expose either directly to the Internet. Remote deployment remains incomplete until the implemented HTTP/JWT boundary is certified with the real Auth0 tenant, TLS proxy, firewall, private health/readiness/metrics routing, observability, key rotation, failure cases, and named MCP clients. Caller tokens must never be forwarded to WordPress.
 
 Keep Typesense on a private network. Never publish its admin API or admin key. Pin the tested server image by digest, separate search/index/provisioning/relevance credentials, test snapshots and restore, and run the real-service conformance and outage suites before enabling the provider.
 

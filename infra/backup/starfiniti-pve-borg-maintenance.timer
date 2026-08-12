@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Starfiniti Borg maintenance from the separate maintenance client
+
+[Timer]
+OnCalendar=Sun *-*-* 05:30:00 Europe/Ljubljana
+RandomizedDelaySec=30m
+Persistent=true
+Unit=starfiniti-pve-borg-maintenance.service
+
+[Install]
+WantedBy=timers.target
