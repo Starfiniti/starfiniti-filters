@@ -142,6 +142,41 @@ for (const requiredFragment of [
 ]) {
   requireCondition(backupScript.includes(requiredFragment), `backup safety fragment missing: ${requiredFragment}`);
 }
+for (const script of [
+  'infra/backup/pve-borg-backup.sh',
+  'infra/backup/pve-borg-maintain.sh',
+  'infra/backup/pve-borg-verify.sh',
+]) {
+  const content = read(script);
+  for (const requiredFragment of ['! -L "$config_file"', "stat -Lc '%u'", "stat -Lc '%a'", '(8#$mode & 0077) == 0', 'source "/proc/self/fd/$config_fd"']) {
+    requireCondition(content.includes(requiredFragment), `${script} configuration custody check missing: ${requiredFragment}`);
+  }
+}
+const maintenanceService = read('infra/backup/starfiniti-pve-borg-maintenance.service');
+const maintenanceTimer = read('infra/backup/starfiniti-pve-borg-maintenance.timer');
+requireCondition(maintenanceService.includes('pve-borg-maintenance.env'), 'maintenance service must use the separate credential configuration');
+requireCondition(maintenanceService.includes('ExecStart=/usr/local/sbin/starfiniti-pve-borg-maintain'), 'maintenance service command changed');
+requireCondition(maintenanceTimer.includes('Unit=starfiniti-pve-borg-maintenance.service'), 'maintenance timer must target the separate service');
+
+const remoteHttp = read('apps/search-ops-mcp/src/http.ts');
+for (const requiredFragment of [
+  'adminAddresses.has(directAddress(request))',
+  'maximumTrackedClients',
+  'maximumBodyConcurrency',
+  'controls.enterBody()',
+  'bodyTimeoutMs',
+  'server.headersTimeout',
+  'server.requestTimeout',
+  'server.keepAliveTimeout',
+  'server.maxHeadersCount',
+  'server.maxRequestsPerSocket',
+]) {
+  requireCondition(remoteHttp.includes(requiredFragment), `remote HTTP bound missing: ${requiredFragment}`);
+}
+const remoteAudit = read('apps/search-ops-mcp/src/audit.ts');
+for (const requiredFragment of ['maximumBytes = 50 * 1024 * 1024', 'rotations = 14', '#pending', '#rotateIfNeeded']) {
+  requireCondition(remoteAudit.includes(requiredFragment), `remote audit hard-size rotation control missing: ${requiredFragment}`);
+}
 
 const secretTemplate = read('infra/certification/typesense-server.ini.example');
 requireCondition(

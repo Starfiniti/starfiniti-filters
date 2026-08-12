@@ -44,7 +44,7 @@ Build a concise evidence table: symptom, observed evidence, likely layer, safe c
 
 ### Storefront
 
-Choose one shared-renderer surface supported now: Search block/shortcode/widget/PHP API, Navigation Search block, or Discovery block/shortcode/widget/PHP API. Include the no-JavaScript fallback and note the current theme qualification boundary. Do not fork behavior by search provider or globally replace unrelated theme forms.
+Choose one surface supported now: Search block/shortcode/widget/PHP API, Navigation Search block, or Discovery block/shortcode/widget/PHP API. All use the shared renderer. Include the no-JavaScript fallback and note the current theme qualification boundary. Do not fork behavior by search provider or globally replace unrelated theme forms.
 
 ### Prototype
 

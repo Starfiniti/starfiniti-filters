@@ -38,10 +38,14 @@ After purchasing the box:
    verify the restored application on an isolated network before enabling the
    timer.
 
-The backup client must not hold the unrestricted maintenance credential. Use a
-separate root-only configuration for `pve-borg-maintain.sh`. Borg append-only
-mode should protect the daily writer; retention and compaction run only from the
-maintenance role.
+The backup client must not hold the unrestricted maintenance credential. Install
+`starfiniti-pve-borg-maintenance.service` and its weekly timer only on a separate
+maintenance client with a root-owned mode-`0600` maintenance configuration and
+unrestricted maintenance key. Borg append-only mode protects the daily writer;
+retention and compaction run only from the maintenance role. Keep the weekly
+window outside the nightly backup window, verify Borg repository locking, and
+alert on either unit failure. Never install or enable the maintenance timer on
+`s2` while it holds only the append-only writer credential.
 
 ## Retention and capacity
 
@@ -54,6 +58,11 @@ snapshots consume the same 5 TB quota.
 Alert at 70 and 80 percent usage. Stop creating new snapshots and investigate at
 90 percent. Never prune merely to silence an alert; first confirm that a newer
 verified backup and an independent recovery key exist.
+
+Before enabling the nightly timer, enable the weekly timer on the separate
+maintenance client, run its service manually, and verify that prune, compact,
+and repository check succeed. Record both timer states and the Storage Box usage
+alerts in the deployment handoff.
 
 ## Restore proof
 

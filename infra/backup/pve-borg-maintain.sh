@@ -4,17 +4,31 @@ set -Eeuo pipefail
 umask 077
 
 config_file="${STARFINITI_BACKUP_CONFIG:-/etc/starfiniti-backup/pve-borg-maintenance.env}"
+lock_file="${STARFINITI_BACKUP_MAINTENANCE_LOCK:-/run/lock/starfiniti-pve-borg-maintenance.lock}"
 
 fail() {
   printf 'starfiniti-backup-maintenance: %s\n' "$*" >&2
   exit 1
 }
 
-[[ $EUID -eq 0 ]] || fail "run as root on the designated maintenance client"
-[[ -r "$config_file" ]] || fail "configuration is not readable: $config_file"
+load_config() {
+  local config_fd owner mode
+  [[ -f "$config_file" && ! -L "$config_file" ]] || fail "configuration must be a regular non-symlink file: $config_file"
+  exec {config_fd}<"$config_file" || fail "configuration is not readable: $config_file"
+  owner="$(stat -Lc '%u' "/proc/self/fd/$config_fd")"
+  mode="$(stat -Lc '%a' "/proc/self/fd/$config_fd")"
+  [[ "$owner" == "0" ]] || fail "configuration must be owned by root: $config_file"
+  (( (8#$mode & 0077) == 0 )) || fail "configuration must not grant group or other permissions: $config_file"
+  # shellcheck source=/dev/null
+  source "/proc/self/fd/$config_fd"
+  exec {config_fd}<&-
+}
 
-# shellcheck source=/dev/null
-source "$config_file"
+[[ $EUID -eq 0 ]] || fail "run as root on the designated maintenance client"
+for command_name in borg flock stat; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is missing"
+done
+load_config
 
 : "${BORG_REPO:?BORG_REPO is required}"
 : "${BORG_REMOTE_PATH:=borg-1.4}"
@@ -30,7 +44,9 @@ export BORG_REPO BORG_RSH BORG_PASSCOMMAND
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
 
-command -v borg >/dev/null 2>&1 || fail "borg is missing"
+install -d -m 0755 "$(dirname "$lock_file")"
+exec 9>"$lock_file"
+flock -n 9 || fail "another maintenance run holds $lock_file"
 
 prune_series() {
   local archive_glob="$1"

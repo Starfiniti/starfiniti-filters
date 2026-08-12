@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { open } from 'node:fs/promises';
 import {
   OAuthError,
   OAuthErrorCode,
@@ -49,6 +49,8 @@ export interface RevocationStore {
 }
 
 export class JsonFileRevocationStore implements RevocationStore {
+  #fingerprint = '';
+  #snapshotLoads = 0;
   #revoked = new Set<string>();
 
   public constructor(private readonly path: string) {
@@ -56,20 +58,32 @@ export class JsonFileRevocationStore implements RevocationStore {
   }
 
   public async refresh(): Promise<void> {
-    const text = await readFile(this.path, 'utf8');
-    if (Buffer.byteLength(text, 'utf8') > 1024 * 1024) throw new Error('Revocation store is too large.');
-    const parsed = JSON.parse(text.replace(/^\uFEFF/, '')) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Revocation store is invalid.');
-    const ids = (parsed as Record<string, unknown>).revoked_token_ids;
-    if (!Array.isArray(ids) || ids.length > 100000 || ids.some((id) => typeof id !== 'string' || !/^[A-Za-z0-9_.:@/-]{1,191}$/.test(id))) {
-      throw new Error('Revocation store token IDs are invalid.');
+    const handle = await open(this.path, 'r');
+    try {
+      const metadata = await handle.stat({ bigint: true });
+      if (!metadata.isFile() || metadata.size > BigInt(1024 * 1024)) throw new Error('Revocation store is invalid or too large.');
+      const fingerprint = `${metadata.dev}:${metadata.ino}:${metadata.size}:${metadata.mtimeNs}:${metadata.ctimeNs}`;
+      if (fingerprint === this.#fingerprint) return;
+      const text = await handle.readFile('utf8');
+      const parsed = JSON.parse(text.replace(/^\uFEFF/, '')) as unknown;
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Revocation store is invalid.');
+      const ids = (parsed as Record<string, unknown>).revoked_token_ids;
+      if (!Array.isArray(ids) || ids.length > 100000 || ids.some((id) => typeof id !== 'string' || !/^[A-Za-z0-9_.:@/-]{1,191}$/.test(id))) {
+        throw new Error('Revocation store token IDs are invalid.');
+      }
+      this.#revoked = new Set(ids);
+      this.#fingerprint = fingerprint;
+      this.#snapshotLoads += 1;
+    } finally {
+      await handle.close();
     }
-    this.#revoked = new Set(ids);
   }
 
   public isRevoked(tokenId: string): boolean {
     return this.#revoked.has(tokenId);
   }
+
+  public get snapshotLoads(): number { return this.#snapshotLoads; }
 }
 
 export interface RemoteTokenPolicy {

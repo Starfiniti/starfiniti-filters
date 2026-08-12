@@ -58,6 +58,9 @@ for (const requiredSkillFile of [
   'ai/starfiniti-search-assistant/agents/openai.yaml',
   'ai/starfiniti-search-assistant/assets/diagnostic-intake.md',
   'ai/starfiniti-search-assistant/assets/prototype-manifest.example.json',
+  'ai/starfiniti-search-assistant/references/current-capabilities.md',
+  'ai/starfiniti-search-assistant/references/prototype-compatibility.md',
+  'ai/starfiniti-search-assistant/references/setup-and-troubleshooting.md',
   'ai/starfiniti-search-assistant/scripts/validate-prototype.mjs',
 ]) if (!files.includes(requiredSkillFile)) failures.push(`plugin package must contain ${requiredSkillFile}`);
 const mainHeader = await readFile(path.join(plugin, 'starfiniti-search.php'), 'utf8');

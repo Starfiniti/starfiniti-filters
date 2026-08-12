@@ -69,12 +69,21 @@ const routeMarkers = {
   setup: '### Setup', troubleshooting: '### Troubleshooting', storefront: '### Storefront',
   prototype: '### Prototype', relevance: '### Relevance and analytics', capability: 'available_now', safety: '## Non-negotiable boundaries',
 };
+const routeContent = {
+  setup: [skill, await readFile(path.join(skillRoot, 'references', 'setup-and-troubleshooting.md'), 'utf8')].join('\n'),
+  troubleshooting: [skill, await readFile(path.join(skillRoot, 'references', 'setup-and-troubleshooting.md'), 'utf8')].join('\n'),
+  storefront: [skill, await readFile(path.join(skillRoot, 'references', 'current-capabilities.md'), 'utf8')].join('\n'),
+  prototype: [skill, await readFile(path.join(skillRoot, 'references', 'prototype-compatibility.md'), 'utf8')].join('\n'),
+  relevance: [skill, await readFile(path.join(skillRoot, 'references', 'current-capabilities.md'), 'utf8')].join('\n'),
+  capability: [skill, await readFile(path.join(skillRoot, 'references', 'current-capabilities.md'), 'utf8')].join('\n'),
+  safety: [skill, await readFile(path.join(skillRoot, 'references', 'setup-and-troubleshooting.md'), 'utf8')].join('\n'),
+};
 for (const scenario of scenarios) {
   requireCondition(typeof scenario.prompt === 'string' && scenario.prompt.length > 10, `${scenario.id}: prompt is missing`);
   requireCondition(skill.includes(routeMarkers[scenario.route]), `${scenario.id}: route ${scenario.route} is not represented in SKILL.md`);
   requireCondition(Array.isArray(scenario.required_behavior) && scenario.required_behavior.length >= 2, `${scenario.id}: expected behavior is incomplete`);
   for (const behavior of scenario.required_behavior || []) {
-    requireCondition(allText.toLowerCase().includes(behavior.toLowerCase()), `${scenario.id}: required behavior is not encoded in the customer skill: ${behavior}`);
+    requireCondition(routeContent[scenario.route].toLowerCase().includes(behavior.toLowerCase()), `${scenario.id}: required behavior is not encoded in the route-specific customer guidance: ${behavior}`);
   }
 }
 
@@ -95,5 +104,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`CUSTOMER SKILL FAILURE: ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Customer skill verification passed: ${files.length} files, ${scenarios.length} scenarios, plugin version ${version}.`);
+  console.log(`Customer skill verification passed: ${files.length} files, ${scenarios.length} instruction-coverage cases, plugin version ${version}.`);
 }

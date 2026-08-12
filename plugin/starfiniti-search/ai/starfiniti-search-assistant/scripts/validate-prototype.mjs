@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 
-import { readFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdtemp, open, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const pluginVersion = '0.3.0-alpha.1';
+const maxManifestBytes = 256 * 1024;
+const maxCollectionItems = 100;
+const maxErrors = 100;
 const allowedSurfaces = new Set(['autocomplete', 'discovery', 'mobile-overlay', 'admin-setup', 'admin-operations', 'admin-relevance', 'admin-analytics']);
 const storefrontSurfaces = new Set(['autocomplete', 'discovery', 'mobile-overlay']);
 const adminSurfaces = new Set(['admin-setup', 'admin-operations', 'admin-relevance', 'admin-analytics']);
@@ -26,18 +31,65 @@ const requiredInteractions = {
   'admin-relevance': ['preview-no-mutation', 'approve-change', 'activate-revision', 'rollback'],
   'admin-analytics': ['show-metric-definitions', 'show-retention', 'show-provider-version-context', 'disable-without-search-impact'],
 };
-const forbiddenCurrentFeatures = new Set(['multiple-suggestion-groups', 'search-history', 'quick-add-to-cart', 'variable-product-selector', 'provider-specific-storefront-controls']);
 const certifiedIntegrations = new Set(['theme-twentytwentyfive']);
-const allowedRenderModes = new Set(['text', 'url', 'minor-units', 'boolean']);
+const allowedCurrentFeatures = new Set([
+  'product-title-autocomplete', 'stock-category-filters', 'bounded-pagination', 'details-disclosure',
+  'normal-search-fallback', 'mobile-overlay', 'canonical-product-links', 'failed-image-recovery',
+  'relevance-sorting', 'price-sorting', 'title-sorting',
+]);
+const allowedPlannedFeatures = new Set(['multiple-suggestion-groups', 'search-history', 'quick-add-to-cart', 'variable-product-selector']);
+const allowedBindings = new Set([
+  'autocomplete-title\0hits[].projection.identity.title\0text',
+  'autocomplete-link\0hits[].projection.identity.url\0url',
+  'product-price\0hits[].projection.pricing.active_min_minor\0minor-units',
+  'product-stock\0hits[].projection.inventory.stock_status\0text',
+  'product-image\0hits[].projection.media.thumbnail_url\0url',
+  'product-image\0hits[].projection.media.primary_image_url\0url',
+  'category-facets\0facets.classification.category_paths\0text',
+]);
 
-const list = (value) => Array.isArray(value) ? value : [];
+const list = (value) => Array.isArray(value) ? value.slice(0, maxCollectionItems) : [];
+
+async function readManifest(file) {
+  const pathMetadata = await lstat(file);
+  if (!pathMetadata.isFile() || pathMetadata.isSymbolicLink()) throw new Error('manifest path must be a regular file, not a directory, symlink, or special file');
+  const handle = await open(file, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
+  try {
+    const metadata = await handle.stat();
+    if (!metadata.isFile()) throw new Error('manifest path must resolve to a regular file');
+    if (metadata.size > maxManifestBytes) throw new Error(`manifest exceeds the ${maxManifestBytes}-byte limit`);
+    const buffer = Buffer.alloc(maxManifestBytes + 1);
+    let total = 0;
+    while (total < buffer.length) {
+      const { bytesRead } = await handle.read(buffer, total, buffer.length - total, null);
+      if (bytesRead === 0) break;
+      total += bytesRead;
+    }
+    if (total > maxManifestBytes) throw new Error(`manifest exceeds the ${maxManifestBytes}-byte limit`);
+    return JSON.parse(buffer.subarray(0, total).toString('utf8').replace(/^\uFEFF/, ''));
+  } finally {
+    await handle.close();
+  }
+}
 
 function validate(manifest) {
   const errors = [];
   const warnings = [];
-  const fail = (message) => errors.push(message);
+  const fail = (message) => { if (errors.length < maxErrors) errors.push(message); };
   const warn = (message) => warnings.push(message);
   if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return { errors: ['manifest must be a JSON object'], warnings };
+  const inspectCollections = (value, location = 'manifest', depth = 0) => {
+    if (depth > 20) { fail(`${location} exceeds the maximum nesting depth`); return; }
+    if (Array.isArray(value)) {
+      if (value.length > maxCollectionItems) fail(`${location} exceeds ${maxCollectionItems} items`);
+      for (const [index, item] of value.slice(0, maxCollectionItems).entries()) inspectCollections(item, `${location}[${index}]`, depth + 1);
+    } else if (value && typeof value === 'object') {
+      const entries = Object.entries(value);
+      if (entries.length > maxCollectionItems) fail(`${location} exceeds ${maxCollectionItems} properties`);
+      for (const [key, item] of entries.slice(0, maxCollectionItems)) inspectCollections(item, `${location}.${key}`, depth + 1);
+    }
+  };
+  inspectCollections(manifest);
   if (manifest.contract_version !== '1.0') fail('contract_version must be "1.0"');
   if (manifest.plugin_version !== pluginVersion) fail(`plugin_version must be "${pluginVersion}"`);
   if (!manifest.prototype || typeof manifest.prototype !== 'object') fail('prototype metadata is required');
@@ -65,13 +117,25 @@ function validate(manifest) {
   if (includesStorefront && bindings.length === 0) fail('storefront prototypes require canonical data bindings');
   for (const [index, binding] of bindings.entries()) {
     if (!binding || typeof binding !== 'object') { fail(`bindings[${index}] must be an object`); continue; }
-    if (!String(binding.source || '').trim()) fail(`bindings[${index}].source is required`);
-    if (!allowedRenderModes.has(binding.render)) fail(`bindings[${index}].render must be text, url, minor-units, or boolean`);
-    if (/typesense|innerhtml|provider_html|raw_html/i.test(String(binding.source || ''))) fail(`bindings[${index}] uses a provider-specific or HTML source`);
+    const component = String(binding.component || '').trim();
+    const source = String(binding.source || '').trim();
+    const render = String(binding.render || '').trim();
+    if (!component) fail(`bindings[${index}].component is required`);
+    if (!source) fail(`bindings[${index}].source is required`);
+    if (!allowedBindings.has(`${component}\0${source}\0${render}`)) fail(`bindings[${index}] is not an allowed canonical component/source/render mapping`);
   }
   if (surfaces.includes('autocomplete')) for (const source of ['hits[].projection.identity.title', 'hits[].projection.identity.url']) if (!bindings.some((binding) => binding?.source === source)) fail(`autocomplete requires binding ${source}`);
   if (surfaces.includes('discovery')) for (const source of ['hits[].projection.pricing.active_min_minor', 'hits[].projection.inventory.stock_status']) if (!bindings.some((binding) => binding?.source === source)) fail(`discovery requires binding ${source}`);
-  if (manifest.prototype?.implementation_target === 'current') for (const feature of list(manifest.features?.current)) if (forbiddenCurrentFeatures.has(feature)) fail(`features.current claims planned capability as current: ${feature}`);
+  const currentFeatures = list(manifest.features?.current);
+  const plannedFeatures = list(manifest.features?.planned);
+  for (const feature of currentFeatures) {
+    if (allowedPlannedFeatures.has(feature)) fail(`features.current claims planned capability as current: ${feature}`);
+    else if (!allowedCurrentFeatures.has(feature)) fail(`features.current contains unsupported capability: ${feature}`);
+  }
+  for (const feature of plannedFeatures) if (!allowedPlannedFeatures.has(feature)) fail(`features.planned contains unsupported capability: ${feature}`);
+  if (new Set(currentFeatures).size !== currentFeatures.length) fail('features.current must not contain duplicates');
+  if (new Set(plannedFeatures).size !== plannedFeatures.length) fail('features.planned must not contain duplicates');
+  for (const feature of currentFeatures) if (plannedFeatures.includes(feature)) fail(`feature cannot be both current and planned: ${feature}`);
   for (const claim of list(manifest.claims?.certified_integrations)) if (!certifiedIntegrations.has(claim)) fail(`uncertified integration claimed as certified: ${claim}`);
   if (list(manifest.features?.planned).length > 0) warn('planned features require implementation, tests, and qualification before current-compatibility claims');
   if (includesStorefront && !list(manifest.claims?.pending_qualification).includes('zoom-200-400')) warn('record 200%/400% zoom as pending qualification unless current evidence is attached');
@@ -97,7 +161,41 @@ async function selfTest() {
   invalid.claims.certified_integrations.push('theme-storefront');
   const rejected = validate(invalid);
   if (rejected.errors.length < 5) throw new Error('invalid manifest was not rejected by all expected safeguards');
-  console.log(`Customer skill prototype self-test passed: valid example accepted; invalid example rejected with ${rejected.errors.length} errors.`);
+  const rejectionCases = [
+    ['wrong canonical render type', (candidate) => { candidate.bindings[0].render = 'url'; }, 'canonical component/source/render'],
+    ['unknown binding source', (candidate) => { candidate.bindings.push({ component: 'invented', source: 'totally.noncanonical.payload', render: 'text' }); }, 'canonical component/source/render'],
+    ['unknown current capability', (candidate) => { candidate.features.current.push('invented-current-capability'); }, 'unsupported capability'],
+    ['planned capability labeled current', (candidate) => { candidate.prototype.implementation_target = 'planned'; candidate.features.current.push('quick-add-to-cart'); }, 'planned capability as current'],
+    ['unknown planned capability', (candidate) => { candidate.features.planned.push('invented-planned-capability'); }, 'features.planned contains unsupported'],
+  ];
+  for (const [label, mutate, expected] of rejectionCases) {
+    const candidate = structuredClone(example);
+    mutate(candidate);
+    const result = validate(candidate);
+    if (!result.errors.some((error) => error.includes(expected))) throw new Error(`${label} was not rejected`);
+  }
+  const temporary = await mkdtemp(path.join(tmpdir(), 'starfiniti-prototype-'));
+  try {
+    const oversized = path.join(temporary, 'oversized.json');
+    await writeFile(oversized, ' '.repeat(maxManifestBytes + 1));
+    await readManifest(oversized).then(() => { throw new Error('oversized manifest was accepted'); }, (error) => {
+      if (!String(error).includes('byte limit')) throw error;
+    });
+    const target = path.join(temporary, 'target.json');
+    const linked = path.join(temporary, 'linked.json');
+    await writeFile(target, JSON.stringify(example));
+    try {
+      await symlink(target, linked, 'file');
+      await readManifest(linked).then(() => { throw new Error('symlink manifest was accepted'); }, (error) => {
+        if (!/symlink|ELOOP/i.test(String(error))) throw error;
+      });
+    } catch (error) {
+      if (!['EPERM', 'EACCES', 'ENOSYS'].includes(error?.code)) throw error;
+    }
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
+  console.log(`Customer skill prototype self-test passed: valid example accepted; unsafe example and ${rejectionCases.length} focused cases rejected.`);
 }
 
 const argument = process.argv[2];
@@ -109,7 +207,7 @@ if (argument === '--self-test') {
 } else {
   try {
     const file = path.resolve(process.cwd(), argument);
-    const manifest = JSON.parse(await readFile(file, 'utf8'));
+    const manifest = await readManifest(file);
     const result = validate(manifest);
     printResult(result, path.relative(process.cwd(), file) || path.basename(file));
     if (result.errors.length) process.exitCode = 1;

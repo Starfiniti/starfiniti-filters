@@ -11,6 +11,14 @@ function cleanString(value: string): string {
     .slice(0, maximumString);
 }
 
+function isSensitiveKey(key: string): boolean {
+  const normalized = key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+  const parts = normalized.split(/[_.:-]+/).filter(Boolean);
+  const sensitive = new Set(['auth', 'authorization', 'cookie', 'cookies', 'credential', 'credentials', 'nonce', 'password', 'passwd', 'secret', 'session', 'token']);
+  if (parts.some((part) => sensitive.has(part))) return true;
+  return parts.some((part, index) => part === 'key' && ['access', 'api', 'encryption', 'private', 'secret', 'signing', 'ssh'].includes(parts[index - 1] ?? ''));
+}
+
 export function sanitizeDownstream(value: unknown, depth = 0): unknown {
   if (depth > 8) return '[depth-limited]';
   if (typeof value === 'string') return cleanString(value);
@@ -20,7 +28,7 @@ export function sanitizeDownstream(value: unknown, depth = 0): unknown {
   if (value && typeof value === 'object') {
     const result: Record<string, unknown> = {};
     for (const [key, child] of Object.entries(value).slice(0, maximumKeys)) {
-      if (/^[A-Za-z0-9_.:-]{1,128}$/.test(key) && !/(?:secret|password|authorization|api[_-]?key|token)$/i.test(key)) {
+      if (/^[A-Za-z0-9_.:-]{1,128}$/.test(key) && !isSensitiveKey(key)) {
         result[key] = sanitizeDownstream(child, depth + 1);
       }
     }

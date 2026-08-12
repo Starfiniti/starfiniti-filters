@@ -5,6 +5,7 @@ import type { OAuthMetadata } from '@modelcontextprotocol/server';
 import { JsonLineAuditSink } from './audit.js';
 import { EnvironmentCredentialResolver, SearchControlClient } from './control-client.js';
 import { createRemoteMcpApplication, fetchAuthorizationServerMetadata } from './remote.js';
+import { RequestControls } from './request-controls.js';
 import { JsonFileRevocationStore, RemoteJwtVerifier } from './security.js';
 import { SiteRegistry } from './site-registry.js';
 
@@ -20,33 +21,18 @@ interface HttpConfiguration {
   allowedHostnames: string[];
   allowedOriginHostnames: string[];
   adminHostnames: string[];
+  adminAddresses: Set<string>;
   trustedProxyAddresses: Set<string>;
   maximumBodyBytes: number;
+  maximumBodyConcurrency: number;
   maximumConcurrency: number;
+  maximumTrackedClients: number;
   requestsPerMinute: number;
+  bodyTimeoutMs: number;
+  headersTimeoutMs: number;
+  requestTimeoutMs: number;
+  keepAliveTimeoutMs: number;
   allowInsecure: boolean;
-}
-
-class RequestControls {
-  #inFlight = 0;
-  readonly #requests = new Map<string, { window: number; count: number }>();
-
-  public constructor(private readonly config: HttpConfiguration) {}
-
-  public enter(client: string): (() => void) | undefined {
-    const window = Math.floor(Date.now() / 60000);
-    const current = this.#requests.get(client);
-    const next = current?.window === window ? { window, count: current.count + 1 } : { window, count: 1 };
-    this.#requests.set(client, next);
-    if (this.#requests.size > 10000) {
-      for (const [key, value] of this.#requests) if (value.window < window) this.#requests.delete(key);
-    }
-    if (next.count > this.config.requestsPerMinute || this.#inFlight >= this.config.maximumConcurrency) return undefined;
-    this.#inFlight += 1;
-    return () => { this.#inFlight -= 1; };
-  }
-
-  public get inFlight(): number { return this.#inFlight; }
 }
 
 class Metrics {
@@ -113,10 +99,17 @@ function loadConfiguration(environment: NodeJS.ProcessEnv): HttpConfiguration {
     allowedHostnames,
     allowedOriginHostnames,
     adminHostnames: list(required(environment, 'STARFINITI_MCP_ADMIN_HOSTS')),
+    adminAddresses: new Set(list(required(environment, 'STARFINITI_MCP_ADMIN_ADDRESSES'))),
     trustedProxyAddresses: new Set(list(environment.STARFINITI_MCP_TRUSTED_PROXY_ADDRESSES)),
     maximumBodyBytes: integer(environment, 'STARFINITI_MCP_MAX_BODY_BYTES', 262144, 1024, 1048576),
+    maximumBodyConcurrency: integer(environment, 'STARFINITI_MCP_MAX_BODY_CONCURRENCY', 32, 1, 256),
     maximumConcurrency: integer(environment, 'STARFINITI_MCP_MAX_CONCURRENCY', 32, 1, 256),
+    maximumTrackedClients: integer(environment, 'STARFINITI_MCP_MAX_TRACKED_CLIENTS', 10000, 100, 100000),
     requestsPerMinute: integer(environment, 'STARFINITI_MCP_REQUESTS_PER_MINUTE', 60, 1, 10000),
+    bodyTimeoutMs: integer(environment, 'STARFINITI_MCP_BODY_TIMEOUT_MS', 10000, 1000, 60000),
+    headersTimeoutMs: integer(environment, 'STARFINITI_MCP_HEADERS_TIMEOUT_MS', 10000, 1000, 60000),
+    requestTimeoutMs: integer(environment, 'STARFINITI_MCP_REQUEST_TIMEOUT_MS', 30000, 1000, 120000),
+    keepAliveTimeoutMs: integer(environment, 'STARFINITI_MCP_KEEP_ALIVE_TIMEOUT_MS', 5000, 1000, 30000),
     allowInsecure,
   };
 }
@@ -134,18 +127,32 @@ function clientAddress(request: IncomingMessage, config: HttpConfiguration): str
   return first && /^[A-Fa-f0-9:.]{2,64}$/.test(first) ? first : remote;
 }
 
-async function readJson(request: IncomingMessage, maximumBytes: number): Promise<unknown> {
+function directAddress(request: IncomingMessage): string {
+  return (request.socket.remoteAddress ?? 'unknown').replace(/^::ffff:/, '');
+}
+
+async function readJson(request: IncomingMessage, maximumBytes: number, timeoutMs: number): Promise<unknown> {
   const declared = Number(request.headers['content-length'] ?? 0);
   if (Number.isFinite(declared) && declared > maximumBytes) throw new Error('request_too_large');
   const chunks: Buffer[] = [];
   let size = 0;
-  for await (const raw of request) {
-    const chunk = Buffer.isBuffer(raw) ? raw : Buffer.from(raw as Uint8Array);
-    size += chunk.length;
-    if (size > maximumBytes) throw new Error('request_too_large');
-    chunks.push(chunk);
-  }
-  try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new Error('invalid_json'); }
+  let timer: NodeJS.Timeout | undefined;
+  const consume = async (): Promise<unknown> => {
+    for await (const raw of request) {
+      const chunk = Buffer.isBuffer(raw) ? raw : Buffer.from(raw as Uint8Array);
+      size += chunk.length;
+      if (size > maximumBytes) throw new Error('request_too_large');
+      chunks.push(chunk);
+    }
+    try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new Error('invalid_json'); }
+  };
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      request.destroy();
+      reject(new Error('request_timeout'));
+    }, timeoutMs);
+  });
+  try { return await Promise.race([consume(), deadline]); } finally { if (timer) clearTimeout(timer); }
 }
 
 async function writeResponse(response: Response, output: ServerResponse): Promise<void> {
@@ -222,7 +229,7 @@ async function main(): Promise<void> {
     try {
       const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'invalid'}`);
       if (['/livez', '/readyz', '/metrics'].includes(url.pathname)) {
-        if (!config.adminHostnames.includes(hostname(request))) {
+        if (!config.adminHostnames.includes(hostname(request)) || !config.adminAddresses.has(directAddress(request))) {
           response.writeHead(404).end('Not found.');
           return;
         }
@@ -239,22 +246,37 @@ async function main(): Promise<void> {
       }
 
       metrics.requests += 1;
-      const leave = controls.enter(clientAddress(request, config));
-      if (!leave) {
+      if (!controls.admit(clientAddress(request, config))) {
         metrics.rejected += 1;
         response.writeHead(429, { 'Retry-After': '60', 'Cache-Control': 'no-store' }).end('Request limit exceeded.');
         return;
       }
-      try {
-        let parsedBody: unknown;
-        if (request.method === 'POST') {
-          const contentType = String(request.headers['content-type'] ?? '').split(';', 1)[0]?.trim().toLowerCase();
-          if (contentType !== 'application/json') {
-            response.writeHead(415, { 'Cache-Control': 'no-store' }).end('Unsupported media type.');
-            return;
-          }
-          parsedBody = await readJson(request, config.maximumBodyBytes);
+      let parsedBody: unknown;
+      if (request.method === 'POST') {
+        const contentType = String(request.headers['content-type'] ?? '').split(';', 1)[0]?.trim().toLowerCase();
+        if (contentType !== 'application/json') {
+          response.writeHead(415, { 'Cache-Control': 'no-store' }).end('Unsupported media type.');
+          return;
         }
+        const leaveBody = controls.enterBody();
+        if (!leaveBody) {
+          metrics.rejected += 1;
+          response.writeHead(429, { 'Retry-After': '1', 'Cache-Control': 'no-store' }).end('Body admission limit exceeded.');
+          return;
+        }
+        try {
+          parsedBody = await readJson(request, config.maximumBodyBytes, config.bodyTimeoutMs);
+        } finally {
+          leaveBody();
+        }
+      }
+      const leave = controls.enterExecution();
+      if (!leave) {
+        metrics.rejected += 1;
+        response.writeHead(429, { 'Retry-After': '1', 'Cache-Control': 'no-store' }).end('Execution concurrency limit exceeded.');
+        return;
+      }
+      try {
         const webRequest = toWebRequest(request, parsedBody);
         await writeResponse(await application.fetch(webRequest), response);
       } finally {
@@ -263,11 +285,16 @@ async function main(): Promise<void> {
     } catch (error) {
       metrics.errors += 1;
       const code = error instanceof Error ? error.message : '';
-      const status = code === 'request_too_large' ? 413 : (code === 'invalid_json' ? 400 : 500);
+      const status = code === 'request_too_large' ? 413 : (code === 'invalid_json' ? 400 : (code === 'request_timeout' ? 408 : 500));
       if (!response.headersSent) response.writeHead(status, { 'Cache-Control': 'no-store' }).end(status === 500 ? 'Internal server error.' : 'Invalid request.');
       else response.end();
     }
   });
+  server.headersTimeout = config.headersTimeoutMs;
+  server.requestTimeout = config.requestTimeoutMs;
+  server.keepAliveTimeout = config.keepAliveTimeoutMs;
+  server.maxHeadersCount = 100;
+  server.maxRequestsPerSocket = 100;
 
   const close = async (): Promise<void> => {
     server.close();

@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, rename, rm, unlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import type { OAuthMetadata } from '@modelcontextprotocol/server';
@@ -6,7 +9,7 @@ import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { MemoryAuditSink } from '../src/audit.js';
 import { SearchControlClient, type CredentialResolver } from '../src/control-client.js';
 import { createRemoteMcpApplication, fetchAuthorizationServerMetadata } from '../src/remote.js';
-import { principalFromAuthInfo, RemoteJwtVerifier, type RevocationStore } from '../src/security.js';
+import { JsonFileRevocationStore, principalFromAuthInfo, RemoteJwtVerifier, type RevocationStore } from '../src/security.js';
 import { SiteRegistry } from '../src/site-registry.js';
 
 const issuer = new URL('https://auth.example/');
@@ -96,6 +99,31 @@ test('remote JWT verification binds a request principal and enforces local revoc
   assert.deepEqual([...principal.scopes], ['search.read', 'search.diagnostics.read', 'search.config.read', 'search.index.plan']);
   revocations.revoked.add('token-1');
   await assert.rejects(verifier.verifyAccessToken(token), /access token is invalid/i);
+});
+
+test('file revocations reuse an unchanged snapshot and reload atomic replacements', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'starfiniti-revocations-'));
+  const active = path.join(directory, 'revocations.json');
+  const replacement = path.join(directory, 'replacement.json');
+  try {
+    await writeFile(active, JSON.stringify({ revoked_token_ids: ['token-1'] }), { encoding: 'utf8', mode: 0o600 });
+    const store = new JsonFileRevocationStore(active);
+    await store.refresh();
+    assert.equal(store.isRevoked('token-1'), true);
+    assert.equal(store.snapshotLoads, 1);
+    await store.refresh();
+    assert.equal(store.snapshotLoads, 1);
+    await writeFile(replacement, JSON.stringify({ revoked_token_ids: ['token-2'] }), { encoding: 'utf8', mode: 0o600 });
+    await rename(replacement, active);
+    await store.refresh();
+    assert.equal(store.snapshotLoads, 2);
+    assert.equal(store.isRevoked('token-1'), false);
+    assert.equal(store.isRevoked('token-2'), true);
+    await unlink(active);
+    await assert.rejects(store.refresh());
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('remote app serves OAuth discovery, challenges unauthenticated calls, and runs modern MCP per request', async () => {

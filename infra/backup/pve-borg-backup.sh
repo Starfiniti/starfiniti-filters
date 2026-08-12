@@ -15,11 +15,22 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "required command is missing: $1"
 }
 
-[[ $EUID -eq 0 ]] || fail "run as root"
-[[ -r "$config_file" ]] || fail "configuration is not readable: $config_file"
+load_config() {
+  local config_fd owner mode
+  [[ -f "$config_file" && ! -L "$config_file" ]] || fail "configuration must be a regular non-symlink file: $config_file"
+  exec {config_fd}<"$config_file" || fail "configuration is not readable: $config_file"
+  owner="$(stat -Lc '%u' "/proc/self/fd/$config_fd")"
+  mode="$(stat -Lc '%a' "/proc/self/fd/$config_fd")"
+  [[ "$owner" == "0" ]] || fail "configuration must be owned by root: $config_file"
+  (( (8#$mode & 0077) == 0 )) || fail "configuration must not grant group or other permissions: $config_file"
+  # shellcheck source=/dev/null
+  source "/proc/self/fd/$config_fd"
+  exec {config_fd}<&-
+}
 
-# shellcheck source=/dev/null
-source "$config_file"
+[[ $EUID -eq 0 ]] || fail "run as root"
+require_command stat
+load_config
 
 : "${BORG_REPO:?BORG_REPO is required}"
 : "${BORG_REMOTE_PATH:=borg-1.4}"

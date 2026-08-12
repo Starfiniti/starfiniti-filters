@@ -20,6 +20,8 @@ $skillArchive = Join-Path $dist "starfiniti-search-ai-skill-$version.zip"
 
 & $node (Join-Path $PSScriptRoot 'verify-release.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Release policy scan failed.' }
+& $node (Join-Path $PSScriptRoot 'verify-customer-skill.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Customer skill verification failed.' }
 if (-not (Test-Path $php)) { throw 'Pinned PHP runtime is missing; run runtime:setup.' }
 Get-ChildItem $source -Recurse -Filter *.php | ForEach-Object {
     & $php -l $_.FullName | Out-Null

@@ -33,6 +33,60 @@ function Build-Artifact {
     }
 }
 
+function Resolve-ArchiveEntry {
+    param(
+        [Parameter(Mandatory = $true)][string]$EntryName,
+        [Parameter(Mandatory = $true)][string]$ExpectedRoot,
+        [Parameter(Mandatory = $true)][string]$TargetRoot,
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][Collections.Generic.HashSet[string]]$Seen
+    )
+
+    if ($EntryName.Contains('\')) { throw "Archive entry uses a backslash: $EntryName" }
+    $segments = @($EntryName.Split('/'))
+    if ($segments.Count -lt 2 -or $segments[0] -cne $ExpectedRoot) {
+        throw "Archive entry is outside the expected root ${ExpectedRoot}: $EntryName"
+    }
+    foreach ($segment in $segments) {
+        if ([string]::IsNullOrEmpty($segment) -or $segment -eq '.' -or $segment -eq '..' -or $segment.Contains(':')) {
+            throw "Archive entry has an unsafe path segment: $EntryName"
+        }
+    }
+
+    $relative = [string]::Join([IO.Path]::DirectorySeparatorChar, $segments[1..($segments.Count - 1)])
+    if (-not $Seen.Add($relative)) { throw "Archive contains a duplicate or case-colliding entry: $EntryName" }
+    $targetPrefix = [IO.Path]::GetFullPath($TargetRoot).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    $path = [IO.Path]::GetFullPath((Join-Path $TargetRoot $relative))
+    if (-not $path.StartsWith($targetPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Archive entry resolves outside the installed root: $EntryName"
+    }
+    return @{ Relative = $relative; Path = $path }
+}
+
+function Assert-ArchiveEntryValidator {
+    $invalidEntries = @(
+        'wrong-root/file.php',
+        'starfiniti-search/../file.php',
+        'starfiniti-search/.//file.php',
+        'starfiniti-search\file.php',
+        'starfiniti-search/C:/file.php'
+    )
+    foreach ($entryName in $invalidEntries) {
+        $rejected = $false
+        try {
+            $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+            Resolve-ArchiveEntry -EntryName $entryName -ExpectedRoot 'starfiniti-search' -TargetRoot $installed -Seen $seen | Out-Null
+        } catch { $rejected = $true }
+        if (-not $rejected) { throw "Unsafe archive-entry self-test was accepted: $entryName" }
+    }
+    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    Resolve-ArchiveEntry -EntryName 'starfiniti-search/File.php' -ExpectedRoot 'starfiniti-search' -TargetRoot $installed -Seen $seen | Out-Null
+    $collisionRejected = $false
+    try {
+        Resolve-ArchiveEntry -EntryName 'starfiniti-search/file.php' -ExpectedRoot 'starfiniti-search' -TargetRoot $installed -Seen $seen | Out-Null
+    } catch { $collisionRejected = $true }
+    if (-not $collisionRejected) { throw 'Case-colliding archive-entry self-test was accepted.' }
+}
+
 function Assert-SkillArtifact {
     Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -44,10 +98,11 @@ function Assert-SkillArtifact {
         if ($entries.Count -ne $installedFiles.Count) {
             throw "Customer skill file count mismatch: archive=$($entries.Count), installed=$($installedFiles.Count)."
         }
+        $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         foreach ($entry in $entries) {
-            if (-not $entry.FullName.StartsWith('starfiniti-search-assistant/')) { throw "Unexpected customer skill entry: $($entry.FullName)" }
-            $relative = $entry.FullName.Substring('starfiniti-search-assistant/'.Length).Replace('/', [IO.Path]::DirectorySeparatorChar)
-            $path = Join-Path $skillInstalled $relative
+            $resolved = Resolve-ArchiveEntry -EntryName $entry.FullName -ExpectedRoot 'starfiniti-search-assistant' -TargetRoot $skillInstalled -Seen $seen
+            $relative = $resolved.Relative
+            $path = $resolved.Path
             if (-not (Test-Path -LiteralPath $path)) { throw "Installed customer skill file is missing: $relative" }
             $stream = $entry.Open()
             try {
@@ -72,9 +127,11 @@ function Assert-InstalledArtifact {
         if ($entries.Count -ne $installedFiles.Count) {
             throw "Installed file count mismatch: archive=$($entries.Count), installed=$($installedFiles.Count)."
         }
+        $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         foreach ($entry in $entries) {
-            $relative = $entry.FullName.Substring('starfiniti-search/'.Length).Replace('/', [IO.Path]::DirectorySeparatorChar)
-            $path = Join-Path $installed $relative
+            $resolved = Resolve-ArchiveEntry -EntryName $entry.FullName -ExpectedRoot 'starfiniti-search' -TargetRoot $installed -Seen $seen
+            $relative = $resolved.Relative
+            $path = $resolved.Path
             if (-not (Test-Path -LiteralPath $path)) { throw "Installed file is missing: $relative" }
             $stream = $entry.Open()
             try {
@@ -89,6 +146,7 @@ function Assert-InstalledArtifact {
     } finally { $archive.Dispose() }
 }
 
+Assert-ArchiveEntryValidator
 powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'wordpress-runtime.ps1') start | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'WordPress runtime did not start.' }
 
