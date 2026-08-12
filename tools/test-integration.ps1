@@ -18,8 +18,14 @@ function Search([string] $Query) {
 }
 
 function Run-Actions {
+    $pending = (& $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\action-scheduler-pending.php')).Trim()
+    if ($LASTEXITCODE -ne 0 -or $pending -notmatch '^\d+$') { throw 'Action Scheduler pending-work inspection failed.' }
+    if ([int] $pending -eq 0) { return }
     & $php $wp --path=$site action-scheduler run --group=starfiniti-search --batch-size=100 --batches=10 --force | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Action Scheduler execution failed.' }
+    if ($LASTEXITCODE -ne 0) {
+        $remaining = (& $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\action-scheduler-pending.php')).Trim()
+        if ($LASTEXITCODE -ne 0 -or $remaining -notmatch '^\d+$' -or [int] $remaining -ne 0) { throw 'Action Scheduler execution failed.' }
+    }
 }
 
 function Initialize-CatalogSeed {
