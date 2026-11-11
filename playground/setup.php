@@ -132,10 +132,12 @@ for ( $i = 1; $i <= 24; $i++ ) {
 	wp_set_object_terms( $product_id, array( $brands[ $brand ] ), 'product_brand' );
 }
 
-// Use the default filters plus a colour filter, and show the panel in the Storefront sidebar.
+// Use the default filters plus a colour filter, continue the list with a "Load more" button
+// and show the panel in the Storefront sidebar.
 update_option(
 	'sffilters_settings',
 	array(
+		'pagination' => 'more',
 		'filters' => array(
 			array(
 				'slug'     => 'cat',

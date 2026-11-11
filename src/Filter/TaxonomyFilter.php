@@ -73,6 +73,36 @@ final class TaxonomyFilter extends Filter {
 		);
 	}
 
+	public function selected( array $values ): array {
+		$names = array();
+		$terms = get_terms(
+			array(
+				'taxonomy'   => $this->taxonomy,
+				'slug'       => $values,
+				'hide_empty' => false,
+			)
+		);
+
+		foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+			$names[ $term->slug ] = $term->name;
+		}
+
+		$chips = array();
+
+		foreach ( $values as $value ) {
+			$chips[] = array(
+				'label'  => $names[ $value ] ?? urldecode( $value ),
+				'values' => array_values( array_diff( $values, array( $value ) ) ),
+			);
+		}
+
+		return $chips;
+	}
+
+	public function format( array $values ): string {
+		return implode( ',', array_map( 'urldecode', $values ) );
+	}
+
 	/**
 	 * Loads the terms that have products, plus selected terms that have none left.
 	 *

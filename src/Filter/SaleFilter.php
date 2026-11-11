@@ -47,4 +47,13 @@ final class SaleFilter extends Filter {
 			'selected' => $selected,
 		);
 	}
+
+	public function selected( array $values ): array {
+		return array(
+			array(
+				'label'  => $this->label,
+				'values' => array(),
+			),
+		);
+	}
 }

@@ -61,6 +61,7 @@ final class MainQuery {
 
 	/**
 	 * Wraps the result count, sorting, products and pagination, so the script can swap them in one piece.
+	 * The bar with the selected filters goes first.
 	 */
 	public function open_results(): void {
 		if ( $this->results_open || null === Plugin::instance()->base_query_vars() || wc_get_loop_prop( 'is_shortcode' ) ) {
@@ -69,7 +70,11 @@ final class MainQuery {
 
 		$this->results_open = true;
 
-		echo '<div class="sffilters-results" data-sffilters-results>';
+		// Page one of this list without its query string. The script sorts from here.
+		$base = (string) strtok( get_pagenum_link( 1, false ), '?' );
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The bar is escaped in Panel::bar().
+		echo '<div class="sffilters-results" data-sffilters-results data-sffilters-base="' . esc_url( $base ) . '">' . Plugin::instance()->panel()->bar();
 	}
 
 	public function close_results(): void {

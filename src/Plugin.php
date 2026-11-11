@@ -32,6 +32,8 @@ final class Plugin {
 
 	private ?array $base_query_vars = null;
 
+	private ?Panel $panel = null;
+
 	public static function instance(): Plugin {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -51,7 +53,7 @@ final class Plugin {
 
 		( new Query() )->register();
 		( new MainQuery() )->register();
-		( new Panel() )->register();
+		$this->panel()->register();
 
 		/**
 		 * Fires once Starfiniti Filters has loaded with WooCommerce active.
@@ -71,6 +73,14 @@ final class Plugin {
 			false,
 			dirname( plugin_basename( SFFILTERS_PLUGIN_FILE ) ) . '/languages'
 		);
+	}
+
+	public function panel(): Panel {
+		if ( null === $this->panel ) {
+			$this->panel = new Panel();
+		}
+
+		return $this->panel;
 	}
 
 	/**

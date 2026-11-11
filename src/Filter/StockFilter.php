@@ -68,4 +68,18 @@ final class StockFilter extends Filter {
 			'options' => $options,
 		);
 	}
+
+	public function selected( array $values ): array {
+		$labels = wc_get_product_stock_status_options();
+		$chips  = array();
+
+		foreach ( $values as $value ) {
+			$chips[] = array(
+				'label'  => $labels[ $value ] ?? $value,
+				'values' => array_values( array_diff( $values, array( $value ) ) ),
+			);
+		}
+
+		return $chips;
+	}
 }

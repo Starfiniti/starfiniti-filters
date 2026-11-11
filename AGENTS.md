@@ -30,7 +30,8 @@ The previous attempt in this repository grew into an enterprise search platform 
 - `src/State.php` reads the filter values from the URL.
 - `src/Query.php` turns state into `WP_Query` vars. Price, stock and sale go through the WooCommerce product lookup table.
 - `src/Integration/` holds one class per product list the plugin can filter. `MainQuery` covers the WooCommerce shop and archive pages.
-- `src/Panel.php` renders the `[sffilters]` form. `assets/filters.js` swaps the results and the panel.
+- `src/Panel.php` renders the `[sffilters]` form and the bar above the products (mobile button, selected filters). `assets/filters.js` swaps the results and the panel, and adds the drawer, the price slider and "Load more".
+- `languages/` holds the Slovenian `.po` and the compiled `.mo`. Strings the script shows come from PHP through `sffiltersConfig.strings`.
 - `src/Settings.php` reads `sffilters_settings` and builds the filters.
 
 ## Conventions
@@ -46,6 +47,7 @@ The previous attempt in this repository grew into an enterprise search platform 
 
 - `npm run playground` starts the local store at `http://127.0.0.1:9410/shop/`.
 - `npm run lint:php` checks PHP syntax.
+- `npm run i18n` compiles `languages/*.po` into `.mo`.
 
 ## Git
 

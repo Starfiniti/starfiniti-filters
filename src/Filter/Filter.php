@@ -69,6 +69,25 @@ abstract class Filter {
 	abstract public function facet( string $ids_sql, array $values ): array;
 
 	/**
+	 * Lists what is selected, one entry per thing the shopper can remove.
+	 *
+	 * Each entry holds the `label` to show and the `values` that stay selected once it is removed.
+	 *
+	 * @param array $values Clean values from parse().
+	 * @return array<int, array{label: string, values: array}>
+	 */
+	abstract public function selected( array $values ): array;
+
+	/**
+	 * Writes clean values back as the URL value, for example `anker,xiaomi`.
+	 *
+	 * @param array $values Clean values from parse().
+	 */
+	public function format( array $values ): string {
+		return implode( ',', $values );
+	}
+
+	/**
 	 * Splits a request value such as `anker,xiaomi` or `array( 'anker', 'xiaomi' )` into a list.
 	 *
 	 * @param mixed $raw Unslashed request value.

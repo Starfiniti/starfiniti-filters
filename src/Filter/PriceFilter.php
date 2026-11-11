@@ -87,6 +87,46 @@ final class PriceFilter extends Filter {
 		);
 	}
 
+	public function selected( array $values ): array {
+		$min = isset( $values['min'] ) ? self::money( (float) $values['min'] ) : null;
+		$max = isset( $values['max'] ) ? self::money( (float) $values['max'] ) : null;
+
+		if ( null !== $min && null !== $max ) {
+			/* translators: 1: lowest price, 2: highest price. */
+			$label = sprintf( _x( '%1$s – %2$s', 'price range', 'starfiniti-filters' ), $min, $max );
+		} elseif ( null !== $min ) {
+			/* translators: %s: lowest price. */
+			$label = sprintf( __( 'From %s', 'starfiniti-filters' ), $min );
+		} else {
+			/* translators: %s: highest price. */
+			$label = sprintf( __( 'Up to %s', 'starfiniti-filters' ), $max );
+		}
+
+		return array(
+			array(
+				'label'  => $label,
+				'values' => array(),
+			),
+		);
+	}
+
+	public function format( array $values ): string {
+		$min = isset( $values['min'] ) ? (string) (float) $values['min'] : '';
+		$max = isset( $values['max'] ) ? (string) (float) $values['max'] : '';
+
+		return $min . '-' . $max;
+	}
+
+	/**
+	 * Formats an amount as plain text in the store currency, without decimals for whole amounts.
+	 */
+	private static function money( float $amount ): string {
+		$decimals = floor( $amount ) === $amount ? 0 : wc_get_price_decimals();
+		$price    = wc_price( $amount, array( 'decimals' => $decimals ) );
+
+		return html_entity_decode( wp_strip_all_tags( $price ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+	}
+
 	/**
 	 * Reads one amount. Accepts a decimal comma.
 	 *

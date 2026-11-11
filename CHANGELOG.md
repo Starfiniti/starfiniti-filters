@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.3.0
+
+- Added a bar above the products with one removable chip per selected value and a "Clear all" link.
+- Added the mobile panel: on screens up to 768px a "Filters" button opens the panel as a drawer.
+- Added a two-handle price slider above the price inputs.
+- Added "Load more" and infinite scroll as alternatives to page links, set with `pagination` in `sffilters_settings` or the `sffilters_pagination` filter. After Back from a product the loaded pages and the scroll position return.
+- The sorting dropdown now reorders the list without a page reload.
+- Added the Slovenian translation.
+
 ## 0.2.0
 
 - Added filtering of the WooCommerce shop and product archive pages by category, brand, tag, attribute, price range, stock status and on sale. Filter state lives in the URL as `sf_<slug>` parameters.

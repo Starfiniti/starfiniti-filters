@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Renders the panel as a plain GET form, so it works without JavaScript.
  *
- * Place it with the `[sffilters]` shortcode.
+ * Place it with the `[sffilters]` shortcode. On small screens it opens as a drawer from a button above the products.
  */
 final class Panel {
 
@@ -25,9 +25,24 @@ final class Panel {
 	 */
 	private array $ids_sql = array();
 
+	/**
+	 * Number of panels rendered on this page. Each panel gets its number, so the script can match them up.
+	 */
+	private int $count = 0;
+
 	public function register(): void {
 		add_shortcode( 'sffilters', array( $this, 'render' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'assets' ) );
+		add_action( 'wp_head', array( $this, 'head' ), 1 );
+	}
+
+	/**
+	 * Marks the page before it is drawn, so the panel on small screens does not flash before the script hides it.
+	 */
+	public function head(): void {
+		if ( null !== Plugin::instance()->base_query_vars() ) {
+			wp_print_inline_script_tag( "if(window.HTMLDialogElement){document.documentElement.classList.add('sffilters-js');}" );
+		}
 	}
 
 	public function assets(): void {
@@ -52,16 +67,98 @@ final class Panel {
 			'sffilters_script_config',
 			array(
 				'results'    => '[data-sffilters-results]',
+				'products'   => 'ul.products',
 				'pagination' => '.woocommerce-pagination a',
+				'next'       => '.woocommerce-pagination a.next',
+				'ordering'   => '.woocommerce-ordering',
+				'mobile'     => '(max-width: 768px)',
+				'mode'       => Settings::pagination(),
+				'strings'    => array(
+					'title' => __( 'Filters', 'starfiniti-filters' ),
+					'close' => __( 'Close filters', 'starfiniti-filters' ),
+					'more'  => __( 'Load more', 'starfiniti-filters' ),
+				),
 			)
 		);
 
 		wp_add_inline_script( 'sffilters', 'window.sffiltersConfig = ' . wp_json_encode( $config ) . ';', 'before' );
 
-		// The panel usually sits in a sidebar or template. Load the styles in the head when a product list is on the page.
+		// The panel usually sits in a sidebar or template, so load both in time when a product list is on the page.
 		if ( null !== Plugin::instance()->base_query_vars() ) {
 			wp_enqueue_style( 'sffilters' );
+			wp_enqueue_script( 'sffilters' );
 		}
+	}
+
+	/**
+	 * Returns the bar above the products: the button that opens the panel on small screens
+	 * and one removable chip per selected value.
+	 */
+	public function bar(): string {
+		$plugin  = Plugin::instance();
+		$filters = $plugin->filters();
+		$state   = $plugin->state();
+		$base    = $this->base_url( $filters );
+		$args    = array();
+		$chips   = '';
+		$count   = 0;
+
+		foreach ( $state->all() as $slug => $values ) {
+			$args[ $filters[ $slug ]->param() ] = self::encode( $filters[ $slug ]->format( $values ) );
+		}
+
+		foreach ( $state->all() as $slug => $values ) {
+			$filter = $filters[ $slug ];
+
+			foreach ( $filter->selected( $values ) as $chip ) {
+				$rest = $args;
+
+				if ( array() === $chip['values'] ) {
+					unset( $rest[ $filter->param() ] );
+				} else {
+					$rest[ $filter->param() ] = self::encode( $filter->format( $chip['values'] ) );
+				}
+
+				$chips .= sprintf(
+					'<li><a class="sffilters-chip" href="%1$s" rel="nofollow" aria-label="%2$s" data-sffilters-remove>%3$s <span aria-hidden="true">&times;</span></a></li>',
+					esc_url( add_query_arg( $rest, $base ) ),
+					/* translators: %s: selected filter value, for example a brand name. */
+					esc_attr( sprintf( __( 'Remove filter: %s', 'starfiniti-filters' ), $chip['label'] ) ),
+					esc_html( $chip['label'] )
+				);
+
+				++$count;
+			}
+		}
+
+		if ( '' !== $chips ) {
+			$chips = sprintf(
+				'<ul class="sffilters-chips" aria-label="%1$s">%2$s<li><a class="sffilters-clear" href="%3$s" rel="nofollow" data-sffilters-clear>%4$s</a></li></ul>',
+				esc_attr__( 'Selected filters', 'starfiniti-filters' ),
+				$chips,
+				esc_url( $base ),
+				esc_html__( 'Clear all', 'starfiniti-filters' )
+			);
+		}
+
+		$total = (int) wc_get_loop_prop( 'total', 0 );
+
+		return sprintf(
+			'<div class="sffilters-bar%1$s"><button type="button" class="sffilters-toggle button" aria-haspopup="dialog" data-sffilters-toggle data-sffilters-show="%2$s">%3$s%4$s</button>%5$s</div>',
+			0 < $count ? ' sffilters-bar--active' : '',
+			/* translators: %s: number of products. */
+			esc_attr( sprintf( _n( 'Show %s product', 'Show %s products', $total, 'starfiniti-filters' ), number_format_i18n( $total ) ) ),
+			esc_html__( 'Filters', 'starfiniti-filters' ),
+			0 < $count ? ' <span class="sffilters-toggle__count">' . esc_html( number_format_i18n( $count ) ) . '</span>' : '',
+			$chips
+		);
+	}
+
+	/**
+	 * Encodes a filter value for the address and keeps commas readable.
+	 */
+	private static function encode( string $value ): string {
+		return str_replace( '%2C', ',', rawurlencode( $value ) );
 	}
 
 	/**
@@ -114,13 +211,14 @@ final class Panel {
 			: '';
 
 		return sprintf(
-			'<form class="sffilters-panel" method="get" action="%1$s" aria-label="%2$s" data-sffilters-panel>%3$s%4$s<noscript><button type="submit" class="sffilters-apply button">%5$s</button></noscript>%6$s</form>',
+			'<form class="sffilters-panel" method="get" action="%1$s" aria-label="%2$s" data-sffilters-panel="%7$d">%3$s%4$s<noscript><button type="submit" class="sffilters-apply button">%5$s</button></noscript>%6$s</form>',
 			esc_url( $parts[0] ),
 			esc_attr__( 'Product filters', 'starfiniti-filters' ),
 			$hidden, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by wc_query_string_form_fields().
 			$groups, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped where it is built.
 			esc_html__( 'Apply filters', 'starfiniti-filters' ),
-			$clear // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above.
+			$clear, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above.
+			++$this->count
 		);
 	}
 
@@ -222,9 +320,11 @@ final class Panel {
 		}
 
 		return sprintf(
-			'<div class="sffilters-range">%s<span class="sffilters-range__unit">%s</span></div>',
+			'<div class="sffilters-range" data-min="%3$s" data-max="%4$s">%1$s<span class="sffilters-range__unit">%2$s</span></div>',
 			$inputs,
-			esc_html( get_woocommerce_currency_symbol() )
+			esc_html( get_woocommerce_currency_symbol() ),
+			esc_attr( (string) (float) $facet['min'] ),
+			esc_attr( (string) (float) $facet['max'] )
 		);
 	}
 }

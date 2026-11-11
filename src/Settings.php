@@ -58,6 +58,24 @@ final class Settings {
 	}
 
 	/**
+	 * Returns how the product list continues: `pages` for page links, `more` for a
+	 * "Load more" button, `infinite` to load the next page as the shopper scrolls.
+	 */
+	public static function pagination(): string {
+		$stored = get_option( self::OPTION, array() );
+		$mode   = is_array( $stored ) && isset( $stored['pagination'] ) ? (string) $stored['pagination'] : 'pages';
+
+		/**
+		 * Filters how the product list continues.
+		 *
+		 * @param string $mode `pages`, `more` or `infinite`.
+		 */
+		$mode = (string) apply_filters( 'sffilters_pagination', $mode );
+
+		return in_array( $mode, array( 'pages', 'more', 'infinite' ), true ) ? $mode : 'pages';
+	}
+
+	/**
 	 * Filters used until the store configures its own.
 	 *
 	 * @return array[]

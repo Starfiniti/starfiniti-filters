@@ -1,0 +1,80 @@
+# Slovenian translation of Starfiniti Filters.
+# Compile with `npm run i18n`.
+msgid ""
+msgstr ""
+"Project-Id-Version: Starfiniti Filters\n"
+"Language: sl_SI\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
+
+#. translators: 1: lowest price, 2: highest price.
+msgctxt "price range"
+msgid "%1$s – %2$s"
+msgstr "%1$s – %2$s"
+
+#. translators: %s: lowest price.
+msgid "From %s"
+msgstr "Od %s"
+
+#. translators: %s: highest price.
+msgid "Up to %s"
+msgstr "Do %s"
+
+msgid "Filters"
+msgstr "Filtri"
+
+msgid "Close filters"
+msgstr "Zapri filtre"
+
+msgid "Load more"
+msgstr "Naloži več"
+
+#. translators: %s: selected filter value, for example a brand name.
+msgid "Remove filter: %s"
+msgstr "Odstrani filter: %s"
+
+msgid "Selected filters"
+msgstr "Izbrani filtri"
+
+msgid "Clear all"
+msgstr "Počisti vse"
+
+#. translators: %s: number of products.
+msgid "Show %s product"
+msgid_plural "Show %s products"
+msgstr[0] "Prikaži %s izdelek"
+msgstr[1] "Prikaži %s izdelka"
+msgstr[2] "Prikaži %s izdelke"
+msgstr[3] "Prikaži %s izdelkov"
+
+msgid "Product filters"
+msgstr "Filtri izdelkov"
+
+msgid "Apply filters"
+msgstr "Uporabi filtre"
+
+msgid "Lowest price"
+msgstr "Najnižja cena"
+
+msgid "Highest price"
+msgstr "Najvišja cena"
+
+msgid "Price"
+msgstr "Cena"
+
+msgid "Availability"
+msgstr "Zaloga"
+
+msgid "On sale"
+msgstr "V akciji"
+
+msgid "Categories"
+msgstr "Kategorije"
+
+msgid "Tags"
+msgstr "Oznake"
+
+msgid "Brands"
+msgstr "Znamke"

@@ -4,16 +4,21 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.2.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
+Version 0.3.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
 
 Working now:
 
 - Filters by category (as a tree), brand, tag, attribute, price range, stock status and on sale
 - Counts next to every choice, recalculated for the current selection
-- Products, result count, pagination and panel swap without a page reload, with working back and forward buttons
+- Products, result count, pagination, sorting and panel swap without a page reload, with working back and forward buttons
+- Selected filters above the products, each with a remove button, and "Clear all"
+- Mobile panel: a "Filters" button opens the panel as a drawer on screens up to 768px
+- Price slider with two handles
+- Page links, "Load more" or infinite scroll
+- English and Slovenian
 - Filtered pages are `noindex`
 
-Not yet: page builder product lists (Breakdance, Bricks), the `[products]` shortcode, the settings page, mobile panel, price slider, load more and Slovenian.
+Not yet: page builder product lists (Breakdance, Bricks), the `[products]` shortcode and the settings page.
 
 ## Usage
 
@@ -34,6 +39,12 @@ add_filter(
 		return $definitions;
 	}
 );
+```
+
+The product list continues with page links by default. For a "Load more" button or infinite scroll, set `pagination` to `more` or `infinite` in the `sffilters_settings` option, or use the filter:
+
+```php
+add_filter( 'sffilters_pagination', static fn() => 'more' );
 ```
 
 ## How it works
@@ -72,6 +83,12 @@ The store opens at `http://127.0.0.1:9410/shop/`.
 
 ```bash
 npm run lint:php
+```
+
+After changing a `.po` file in `languages/`, compile it:
+
+```bash
+npm run i18n
 ```
 
 ## History
