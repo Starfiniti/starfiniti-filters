@@ -42,6 +42,8 @@ require __DIR__ . '/unit/MoneyTest.php';
 require __DIR__ . '/unit/TokenizerTest.php';
 require __DIR__ . '/unit/SearchDocumentTest.php';
 require __DIR__ . '/unit/ConfigurationTest.php';
+require __DIR__ . '/unit/DiscoveryConfigurationTest.php';
+require __DIR__ . '/unit/FacetFilterTest.php';
 require __DIR__ . '/unit/TypesenseSafetyTest.php';
 require __DIR__ . '/unit/TypesenseProviderTest.php';
 require __DIR__ . '/unit/OperationPlanTest.php';

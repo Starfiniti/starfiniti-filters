@@ -30,4 +30,6 @@ Current: product-title autocomplete links; stock/category filters; relevance/pri
 
 Planned/unqualified: multiple suggestion groups, search history, quick cart actions, variable-product selectors, provider-specific storefront controls, and broad theme certification.
 
+The September 2026 local candidate also implements configurable facets, alternative counts, a compact discovery dialog, selected-filter chips and query-preserving clear. These additions remain outside the validator's `compatible_now` feature allowlist until their release artifact is qualified. Do not label a prototype using them compatible merely because the source code exists.
+
 For every component record its canonical source, render type, state, interaction, fallback, accessibility semantics, visibility boundary, and current/planned status. Validate the companion manifest and treat errors as design blockers. Warnings are explicit implementation or qualification work.

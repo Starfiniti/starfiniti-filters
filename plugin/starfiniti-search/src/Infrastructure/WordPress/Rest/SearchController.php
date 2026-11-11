@@ -77,6 +77,10 @@ final class SearchController
                 $mode = 'full_results';
             }
             $highlight = is_array($json) && ($json['options']['highlight'] ?? false) === true;
+            $facetMode = is_array($json) ? ($json['options']['facet_mode'] ?? 'conjunctive') : 'conjunctive';
+            if (!in_array($facetMode, ['conjunctive', 'disjunctive'], true)) {
+                throw new \InvalidArgumentException('Unsupported facet mode.');
+            }
             $includeExplanation = $mode === 'admin_test' && current_user_can(Capabilities::VIEW_HEALTH) && is_array($json) && ($json['options']['include_explanation'] ?? false) === true;
             $result = $this->provider->search([
                 'contract_version' => '1.0',
@@ -94,7 +98,7 @@ final class SearchController
                 'facets' => $facets,
                 'sort' => $sort,
                 'page' => ['number' => max(1, min(10000, $page)), 'size' => max(1, min(100, $size))],
-                'options' => ['highlight' => $highlight, 'include_explanation' => $includeExplanation, 'suggestion_mode' => $mode],
+                'options' => ['highlight' => $highlight, 'include_explanation' => $includeExplanation, 'suggestion_mode' => $mode, 'facet_mode' => $facetMode],
             ]);
             $this->recordAnalytics($query, $result);
             $response = new WP_REST_Response($result, 200);

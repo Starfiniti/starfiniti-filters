@@ -1,6 +1,8 @@
 # Implementation status
 
-Last reviewed: 2026-08-12
+Last reviewed: 2026-09-07
+
+Current delivery direction is the user's narrowed local Search + Filters replacement/migration, documented in `LOCAL_DELIVERY_PLAN.md`. The uncommitted candidate adds configurable discovery controls and has passing unit, live integration, local MCP and desktop/mobile browser checks. Real semantic migration, same-facet alternatives and representative end-to-end speed are unfinished. Exact-artifact qualification currently fails Plugin Check's WordPress 7.1 tested-up-to requirement; historical passes below do not qualify the current candidate. See the leading `HANDOFF.md` entry for exact evidence and hashes. No historical requirement status is promoted by this update.
 
 The project is not enterprise-ready. The label is prohibited until Gate 10 is complete.
 

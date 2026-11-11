@@ -2,6 +2,10 @@
 
 This is development evidence, not a Gate 10 release certificate.
 
+## Current candidate — 2026-09-07
+
+The leading `HANDOFF.md` entry records the uncommitted local-scope candidate, exact hashes and successful PHP 42/42, MCP 13/13, live integration/schema/local-MCP, four discovery-state tests and 1280/360 px real browser evidence. Browser fixtures and temporary MCP credentials were removed. The small-catalog HTTP p95 is 416.4 ms, not a passing end-to-end budget. `pnpm qualify:artifact` reproduced and installed the ZIP but failed official Plugin Check (`outdated_tested_upto_header`, 7.0 versus 7.1); subsequent exact-artifact checks did not run. No fresh complete `test:all` pass or final release qualification is claimed. Older evidence below is historical, not a substitute for these remaining checks.
+
 ## Pinned environment
 
 - PHP 8.3.28, WordPress 7.0.2, WooCommerce 10.7.0, MariaDB 11.4.10, WP-CLI 2.12.0, Plugin Check 2.0.0.

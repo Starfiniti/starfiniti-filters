@@ -2,6 +2,7 @@
 
 use Starfiniti\Search\Infrastructure\WordPress\Storefront\IntegrationRegistry;
 use Starfiniti\Search\Infrastructure\WordPress\Storefront\SearchWidget;
+use Starfiniti\Search\Infrastructure\WordPress\Configuration\ConfigurationRepository;
 
 $search = do_shortcode('[starfiniti_search]');
 foreach (['<form', 'role="search"', 'name="s"', 'name="post_type" value="product"', 'role="combobox"', 'role="listbox"', 'aria-live="polite"', 'data-sfs-close', 'Close search'] as $required) {
@@ -12,7 +13,7 @@ foreach (['<form', 'role="search"', 'name="s"', 'name="post_type" value="product
 
 $first = do_shortcode('[starfiniti_discovery]');
 $second = do_shortcode('[starfiniti_discovery]');
-foreach (['data-starfiniti-discovery', 'name="sfs_stock"', 'data-sfs-category-options', 'name="sfs_sort"', 'data-sfs-results', 'data-sfs-previous', 'data-sfs-next', '<noscript>'] as $required) {
+foreach (['data-starfiniti-discovery', 'name="sfs_stock"', 'data-sfs-category-options', 'name="sfs_sort"', 'data-sfs-results', 'data-sfs-previous', 'data-sfs-next', '<noscript>', '<dialog', 'data-sfs-panel-clear', 'data-sfs-chips', 'data-sfs-open-filters', 'data-sfs-reset', 'data-sfs-retry'] as $required) {
     if (!str_contains($first, $required)) {
         throw new RuntimeException('Discovery contract markup is missing: ' . $required);
     }
@@ -63,4 +64,38 @@ if (count($configurationLines) !== 1 || substr_count($configurationLines[0], 'St
     throw new RuntimeException('Multiple render surfaces duplicated the shared runtime configuration.');
 }
 
-echo "Storefront contract passed: shared shortcode/block/widget/PHP/headless renderer, no-JS fallback, ARIA, unique instances, and integration registry.\n";
+global $wpdb;
+$repository = new ConfigurationRepository($wpdb);
+$original = $repository->current();
+if ($original === null) {
+    throw new RuntimeException('Storefront test requires an initialized configuration.');
+}
+$draft = $original->toArray();
+$draft['discovery'] = ['filters' => [
+    ['id' => 'color', 'field' => 'attributes.pa_color', 'label' => 'Colour & finish', 'type' => 'checkboxes', 'parameter' => 'color'],
+    ['id' => 'price', 'field' => 'pricing.active_min_minor', 'label' => 'Price', 'type' => 'range', 'parameter' => 'price'],
+    ['id' => 'featured', 'field' => 'quality.featured', 'label' => 'Featured', 'type' => 'select', 'parameter' => 'featured'],
+    ['id' => 'stock', 'field' => 'inventory.stock_status', 'label' => 'Stock', 'type' => 'radio', 'parameter' => 'stock'],
+]];
+try {
+    $repository->createRevision($draft, 'local configured discovery contract', 0);
+    $configured = do_shortcode('[starfiniti_discovery]');
+    foreach (['data-sfs-field="attributes.pa_color"', 'data-sfs-parameter="color"', 'Colour &amp; finish', 'data-sfs-min', 'data-sfs-max', 'data-sfs-type="select"', 'data-sfs-range-error'] as $required) {
+        if (!str_contains($configured, $required)) {
+            throw new RuntimeException('Configured discovery markup is missing: ' . $required);
+        }
+    }
+    if (str_contains($configured, 'data-sfs-stock-options')) {
+        throw new RuntimeException('Configured stock control must replace the default availability control.');
+    }
+    if (strpos($configured, 'data-sfs-filter="color"') > strpos($configured, 'data-sfs-filter="price"')) {
+        throw new RuntimeException('Configured discovery filter order changed.');
+    }
+    if (!in_array('starfiniti-discovery-state', wp_scripts()->registered['starfiniti-search']->deps, true)) {
+        throw new RuntimeException('Discovery state must load before the shared renderer.');
+    }
+} finally {
+    $repository->createRevision($original->toArray(), 'restore after local configured discovery contract', 0);
+}
+
+echo "Storefront contract passed: shared surfaces, fallback, ARIA, unique instances, configured filter bindings and revision restore.\n";

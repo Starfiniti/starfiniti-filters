@@ -23,6 +23,7 @@ All surfaces use one renderer. Do not create provider-specific or theme-specific
 
 ## Planned or unqualified
 
+- The local September 2026 candidate adds optional immutable `discovery.filters` for indexed attributes, stock, featured status, categories and exact price ranges; checkbox/radio/select/range controls; alternative facet counts; a compact discovery dialog; removable selection chips; and query/sort-preserving Clear filters. Verify that the installed artifact contains this candidate before suggesting those capabilities. They are not a shipped migration importer or evidence of full FiboFilters parity; exact-artifact release qualification remains pending.
 - Quick add-to-cart, variable-product selection in results, search history, and multiple suggestion groups.
 - Broad theme/builder, multilingual, multisite, assistive-technology, device/orientation, virtual-keyboard, and 200%/400% zoom matrices.
 - Real Typesense production use, remote authenticated MCP operation, production-like end-to-end latency certification, signed provenance, and final release approval.

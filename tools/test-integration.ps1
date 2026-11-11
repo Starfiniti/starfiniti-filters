@@ -79,6 +79,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Control REST test failed.' }
 & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\storefront-contract.php') | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Storefront contract test failed.' }
 
+& $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\disjunctive-facets.php') | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Disjunctive facet restrictions test failed.' }
+
 & $php $wp --path=$site eval-file (Join-Path $repoRoot 'tests\php\integration\setup-readiness.php') | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Setup readiness test failed.' }
 

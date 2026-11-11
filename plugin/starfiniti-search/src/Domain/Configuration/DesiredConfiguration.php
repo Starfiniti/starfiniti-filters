@@ -10,7 +10,7 @@ use Starfiniti\Search\Domain\Support\CanonicalJson;
 
 final class DesiredConfiguration
 {
-    private const TOP_LEVEL = ['contract_version', 'revision', 'active_read_provider', 'write_targets', 'transport_policy', 'catalog', 'ranking', 'analytics', 'operations', 'provider_configuration_refs'];
+    private const TOP_LEVEL = ['contract_version', 'revision', 'active_read_provider', 'write_targets', 'transport_policy', 'catalog', 'ranking', 'analytics', 'operations', 'provider_configuration_refs', 'discovery'];
 
     /** @param array<string, mixed> $data */
     private function __construct(private readonly array $data)
@@ -44,6 +44,12 @@ final class DesiredConfiguration
         }
         self::validateTransport($data['transport_policy']);
         self::validateCatalog($data['catalog']);
+        if (array_key_exists('discovery', $data)) {
+            if (!is_array($data['discovery'])) {
+                throw new InvalidArgumentException('Discovery configuration must be an object.');
+            }
+            DiscoveryConfiguration::validate($data['discovery']);
+        }
         foreach (['ranking', 'analytics', 'operations'] as $object) {
             if (!is_array($data[$object])) {
                 throw new InvalidArgumentException('Configuration contains an invalid object.');

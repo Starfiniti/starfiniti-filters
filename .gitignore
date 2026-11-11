@@ -9,6 +9,7 @@
 **/node_modules/
 **/vendor/
 /.runtime/
+/.cache/
 /.env
 /.env.*
 !/.env.example

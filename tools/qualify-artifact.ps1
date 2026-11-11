@@ -172,7 +172,7 @@ if ($pluginCheckExit -ne 0 -or (($pluginCheckOutput -join "`n") -match '"type":"
     throw 'Official Plugin Check reported an error or warning for the exact installed artifact.'
 }
 
-foreach ($file in @('storefront-contract.php', 'setup-readiness.php', 'schema-upgrade-v9-v10.php', 'configuration-lifecycle.php', 'custom-fields.php', 'analytics-failure-isolation.php', 'relevance-policy.php', 'control-rest.php', 'admin-relevance.php', 'continuation-scheduling.php')) {
+foreach ($file in @('storefront-contract.php', 'disjunctive-facets.php', 'setup-readiness.php', 'schema-upgrade-v9-v10.php', 'configuration-lifecycle.php', 'custom-fields.php', 'analytics-failure-isolation.php', 'relevance-policy.php', 'control-rest.php', 'admin-relevance.php', 'continuation-scheduling.php')) {
     & $php $wp --path=$site eval-file (Join-Path $repoRoot "tests\php\integration\$file") | Write-Output
     if ($LASTEXITCODE -ne 0) { throw "Installed-artifact contract failed: $file" }
 }

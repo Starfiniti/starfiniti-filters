@@ -240,6 +240,11 @@
         "highlight": {
           "type": "boolean"
         },
+        "facet_mode": {
+          "type": "string",
+          "enum": ["conjunctive", "disjunctive"],
+          "description": "Disjunctive counts omit positive same-field shopper selections in an AND tree, never server visibility or curation restrictions."
+        },
         "include_explanation": {
           "type": "boolean"
         },
