@@ -1,0 +1,39 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"landingPage": "/shop/",
+	"login": true,
+	"steps": [
+		{
+			"step": "installTheme",
+			"themeData": {
+				"resource": "wordpress.org/themes",
+				"slug": "storefront"
+			},
+			"options": {
+				"activate": true
+			}
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "woocommerce"
+			},
+			"options": {
+				"activate": true
+			}
+		},
+		{
+			"step": "activatePlugin",
+			"pluginPath": "starfiniti-filters/starfiniti-filters.php"
+		},
+		{
+			"step": "runPHP",
+			"code": "<?php\nrequire_once '/wordpress/wp-load.php';\nif ( ! class_exists( 'WooCommerce' ) || ! class_exists( 'Starfiniti\\\\Filters\\\\Plugin' ) || ! Starfiniti\\Filters\\Plugin::instance()->is_booted() ) {\n    throw new RuntimeException( 'Starfiniti Filters did not load with WooCommerce.' );\n}\nrequire '/wordpress/wp-content/plugins/starfiniti-filters/playground/setup.php';"
+		}
+	]
+}
