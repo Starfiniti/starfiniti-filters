@@ -7,6 +7,7 @@
 
 namespace Starfiniti\Filters;
 
+use Starfiniti\Filters\Admin\SettingsPage;
 use Starfiniti\Filters\Filter\Filter;
 use Starfiniti\Filters\Integration\MainQuery;
 
@@ -54,6 +55,15 @@ final class Plugin {
 		( new Query() )->register();
 		( new MainQuery() )->register();
 		$this->panel()->register();
+		( new Abilities() )->register();
+
+		if ( is_admin() ) {
+			( new SettingsPage() )->register();
+		}
+
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			\WP_CLI::add_command( 'sffilters', Cli::class );
+		}
 
 		/**
 		 * Fires once Starfiniti Filters has loaded with WooCommerce active.

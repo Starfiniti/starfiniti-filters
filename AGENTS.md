@@ -32,7 +32,7 @@ The previous attempt in this repository grew into an enterprise search platform 
 - `src/Integration/` holds one class per product list the plugin can filter. `MainQuery` covers the WooCommerce shop and archive pages.
 - `src/Panel.php` renders the `[sffilters]` form and the bar above the products (mobile button, selected filters). `assets/filters.js` swaps the results and the panel, and adds the drawer, the price slider and "Load more".
 - `languages/` holds the Slovenian `.po` and the compiled `.mo`. Strings the script shows come from PHP through `sffiltersConfig.strings`.
-- `src/Settings.php` reads `sffilters_settings` and builds the filters.
+- `src/Settings.php` reads and writes `sffilters_settings` and builds the filters. Every way of changing settings goes through `Settings::save()`: `src/Admin/SettingsPage.php` (WooCommerce > Filters, with `assets/admin.js`), `src/Cli.php` (`wp sffilters`) and `src/Abilities.php` (Abilities API, WordPress 6.9+).
 
 ## Conventions
 

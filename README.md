@@ -4,7 +4,7 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.3.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
+Version 0.4.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
 
 Working now:
 
@@ -15,35 +15,49 @@ Working now:
 - Mobile panel: a "Filters" button opens the panel as a drawer on screens up to 768px
 - Price slider with two handles
 - Page links, "Load more" or infinite scroll
+- A settings page under WooCommerce > Filters, the same settings through WP-CLI and the WordPress Abilities API
 - English and Slovenian
 - Filtered pages are `noindex`
 
-Not yet: page builder product lists (Breakdance, Bricks), the `[products]` shortcode and the settings page.
+Not yet: page builder product lists (Breakdance, Bricks) and the `[products]` shortcode.
 
 ## Usage
 
 Put the `[sffilters]` shortcode where the panel should appear, for example in a sidebar widget or a page builder template of the shop page.
 
-Until the settings page exists, the default filters are categories, brands, price, availability and on sale. To change them, store the list in the `sffilters_settings` option or use the `sffilters_filter_definitions` filter:
+Choose the filters under **WooCommerce > Filters**: add a filter for any category, brand, tag or attribute, or for price, availability and sale, set its title and order, and pick how the product list continues (page links, "Load more" or infinite scroll). Until you save, the panel shows categories, brands, price, availability and on sale.
+
+### WP-CLI
+
+```bash
+wp sffilters list
+wp sffilters sources
+wp sffilters add pa_color --label="Colour" --position=2
+wp sffilters move price 1
+wp sffilters label cat "Product type"
+wp sffilters remove sale
+wp sffilters pagination more
+wp sffilters reset --yes
+```
+
+### AI agents
+
+On WordPress 6.9+ the plugin registers two abilities with the Abilities API: `starfiniti-filters/get-settings` and `starfiniti-filters/update-settings`. An agent connected through the MCP Adapter can read and change the same settings. Both need the `manage_woocommerce` capability.
+
+### Code
+
+Two filters change what the store saved:
 
 ```php
 add_filter(
 	'sffilters_filter_definitions',
 	static function ( array $definitions ): array {
-		$definitions[] = array(
-			'slug'     => 'color',
-			'source'   => 'taxonomy',
-			'taxonomy' => 'pa_color',
-		);
+		$definitions[] = array( 'source' => 'pa_color' );
 
 		return $definitions;
 	}
 );
-```
 
-The product list continues with page links by default. For a "Load more" button or infinite scroll, set `pagination` to `more` or `infinite` in the `sffilters_settings` option, or use the filter:
-
-```php
 add_filter( 'sffilters_pagination', static fn() => 'more' );
 ```
 

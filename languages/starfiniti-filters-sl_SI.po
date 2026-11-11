@@ -78,3 +78,122 @@ msgstr "Oznake"
 
 msgid "Brands"
 msgstr "Znamke"
+
+msgid "Starfiniti Filters"
+msgstr "Starfiniti Filters"
+
+msgid "Settings"
+msgstr "Nastavitve"
+
+msgid "Filter added. Save changes to apply."
+msgstr "Filter je dodan. Shranite spremembe, da začne veljati."
+
+msgid "Filter removed. Save changes to apply."
+msgstr "Filter je odstranjen. Shranite spremembe, da začne veljati."
+
+msgid "Filter moved. Save changes to apply."
+msgstr "Filter je premaknjen. Shranite spremembe, da začne veljati."
+
+msgid "You are not allowed to change these settings."
+msgstr "Nimate dovoljenja za spreminjanje teh nastavitev."
+
+#. translators: %s: attribute name, for example Color.
+msgid "%s (attribute)"
+msgstr "%s (atribut)"
+
+msgid "Page links"
+msgstr "Povezave do strani"
+
+msgid "\"Load more\" button"
+msgstr "Gumb »Naloži več«"
+
+msgid "Infinite scroll"
+msgstr "Neskončno drsenje"
+
+msgid "Settings saved."
+msgstr "Nastavitve so shranjene."
+
+msgid "View shop"
+msgstr "Odpri trgovino"
+
+#. translators: %s: the [sffilters] shortcode.
+msgid "The panel shows these filters in this order. Place the panel with the %s shortcode, for example in a sidebar widget or in the shop template of your page builder."
+msgstr "Panel prikaže te filtre v tem vrstnem redu. Postavite ga s kratko kodo %s, na primer v gradnik stranske vrstice ali v predlogo trgovine v graditelju strani."
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Title in the panel"
+msgstr "Naslov v panelu"
+
+msgid "URL parameter"
+msgstr "Parameter v URL-ju"
+
+msgid "Order"
+msgstr "Vrstni red"
+
+msgid "No filters yet. Add one below."
+msgstr "Filtrov še ni. Dodajte ga spodaj."
+
+msgid "Add a filter"
+msgstr "Dodaj filter"
+
+msgid "Choose what to filter by"
+msgstr "Izberite, po čem filtrirate"
+
+msgid "Add"
+msgstr "Dodaj"
+
+msgid "Product list"
+msgstr "Seznam izdelkov"
+
+msgid "How more products load"
+msgstr "Kako se naloži več izdelkov"
+
+#. translators: %s: filter name, for example Categories.
+msgid "Title of the %s filter"
+msgstr "Naslov filtra %s"
+
+#. translators: %s: filter name, for example Categories.
+msgid "Move %s up"
+msgstr "Premakni %s gor"
+
+#. translators: %s: filter name, for example Categories.
+msgid "Move %s down"
+msgstr "Premakni %s dol"
+
+#. translators: %s: filter name, for example Categories.
+msgid "Remove %s"
+msgstr "Odstrani %s"
+
+msgid "Attribute"
+msgstr "Atribut"
+
+msgid "Remove"
+msgstr "Odstrani"
+
+msgid "Product filters of the WooCommerce shop."
+msgstr "Filtri izdelkov v trgovini WooCommerce."
+
+msgid "Get filter settings"
+msgstr "Preberi nastavitve filtrov"
+
+msgid "Update filter settings"
+msgstr "Spremeni nastavitve filtrov"
+
+msgid "Pagination must be pages, more or infinite."
+msgstr "Listanje mora biti pages, more ali infinite."
+
+msgid "Filters must be a list."
+msgstr "Filtri morajo biti seznam."
+
+msgid "Each filter must be an object with a source."
+msgstr "Vsak filter mora biti objekt z virom."
+
+#. translators: %s: filter source, for example product_cat.
+msgid "The filter \"%s\" is listed twice."
+msgstr "Filter »%s« je naveden dvakrat."
+
+#. translators: %s: what was given as the filter source.
+msgid "\"%s\" is not a filter source."
+msgstr "»%s« ni vir filtra."

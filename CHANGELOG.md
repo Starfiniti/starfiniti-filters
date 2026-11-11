@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.4.0
+
+- Added the settings page under WooCommerce > Filters: add, title, reorder and remove filters, and choose page links, "Load more" or infinite scroll.
+- Added WP-CLI commands: `wp sffilters list`, `sources`, `add`, `remove`, `move`, `label`, `pagination` and `reset`.
+- Added two abilities for the WordPress Abilities API (WordPress 6.9+): `starfiniti-filters/get-settings` and `starfiniti-filters/update-settings`.
+- A filter definition may name its taxonomy directly as `source`, for example `pa_color`.
+- A store that saves an empty list of filters now shows no panel. Before, the default filters came back.
+
 ## 0.3.0
 
 - Added a bar above the products with one removable chip per selected value and a "Clear all" link.
