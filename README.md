@@ -4,14 +4,44 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.1.0 is a skeleton. Filtering is not implemented yet. Version 1.0 is in development on the `v1` branch.
+Version 0.2.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
 
-## How it will work
+Working now:
+
+- Filters by category (as a tree), brand, tag, attribute, price range, stock status and on sale
+- Counts next to every choice, recalculated for the current selection
+- Products, result count, pagination and panel swap without a page reload, with working back and forward buttons
+- Filtered pages are `noindex`
+
+Not yet: page builder product lists (Breakdance, Bricks), the `[products]` shortcode, the settings page, mobile panel, price slider, load more and Slovenian.
+
+## Usage
+
+Put the `[sffilters]` shortcode where the panel should appear, for example in a sidebar widget or a page builder template of the shop page.
+
+Until the settings page exists, the default filters are categories, brands, price, availability and on sale. To change them, store the list in the `sffilters_settings` option or use the `sffilters_filter_definitions` filter:
+
+```php
+add_filter(
+	'sffilters_filter_definitions',
+	static function ( array $definitions ): array {
+		$definitions[] = array(
+			'slug'     => 'color',
+			'source'   => 'taxonomy',
+			'taxonomy' => 'pa_color',
+		);
+
+		return $definitions;
+	}
+);
+```
+
+## How it works
 
 1. A shopper picks a filter. The URL gets a parameter such as `?sf_brand=anker,xiaomi&sf_price=50-200`.
 2. The plugin adds those conditions to the product query the theme already runs.
 3. Counts next to each value come from WordPress and WooCommerce tables. There is no separate index to sync.
-4. A small script loads the new URL in the background and swaps the products, result count, pagination and filter panel. Without JavaScript the filters work as normal links.
+4. A small script loads the new URL in the background and swaps the products, result count, pagination and filter panel. Without JavaScript the panel is a normal form.
 
 ## Planned for 1.0
 

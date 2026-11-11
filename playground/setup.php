@@ -4,6 +4,7 @@
  *
  * 24 products across 4 categories (one with two children), 3 brands, 3 colours and 2 tags,
  * with mixed prices, sale prices and stock so every planned filter has something to filter.
+ * The filter panel sits in the Storefront sidebar.
  *
  * @package StarfinitiFilters
  */
@@ -130,6 +131,57 @@ for ( $i = 1; $i <= 24; $i++ ) {
 
 	wp_set_object_terms( $product_id, array( $brands[ $brand ] ), 'product_brand' );
 }
+
+// Use the default filters plus a colour filter, and show the panel in the Storefront sidebar.
+update_option(
+	'sffilters_settings',
+	array(
+		'filters' => array(
+			array(
+				'slug'     => 'cat',
+				'source'   => 'taxonomy',
+				'taxonomy' => 'product_cat',
+			),
+			array(
+				'slug'     => 'brand',
+				'source'   => 'taxonomy',
+				'taxonomy' => 'product_brand',
+			),
+			array(
+				'slug'     => 'color',
+				'source'   => 'taxonomy',
+				'taxonomy' => 'pa_color',
+			),
+			array(
+				'slug'   => 'price',
+				'source' => 'price',
+			),
+			array(
+				'slug'   => 'stock',
+				'source' => 'stock',
+			),
+			array(
+				'slug'   => 'sale',
+				'source' => 'sale',
+			),
+		),
+	)
+);
+
+$sffilters_blocks = get_option( 'widget_block', array() );
+$sffilters_blocks = is_array( $sffilters_blocks ) ? $sffilters_blocks : array();
+
+$sffilters_blocks[90]             = array( 'content' => '<!-- wp:html -->[sffilters]<!-- /wp:html -->' );
+$sffilters_blocks['_multiwidget'] = 1;
+
+update_option( 'widget_block', $sffilters_blocks );
+
+$sffilters_sidebars = get_option( 'sidebars_widgets', array() );
+$sffilters_sidebars = is_array( $sffilters_sidebars ) ? $sffilters_sidebars : array();
+
+$sffilters_sidebars['sidebar-1'] = array( 'block-90' );
+
+update_option( 'sidebars_widgets', $sffilters_sidebars );
 
 // Write the rewrite rules now so the first request to /shop/ resolves, and let
 // WooCommerce rebuild them once more on the next request as a backstop.

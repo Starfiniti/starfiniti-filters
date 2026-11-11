@@ -1,0 +1,89 @@
+/* Starfiniti Filters. Colours and fonts come from the theme. */
+
+.sffilters-panel {
+	display: grid;
+	gap: 1.5rem;
+	margin: 0 0 1.5rem;
+}
+
+.sffilters-filter {
+	border: 0;
+	margin: 0;
+	min-width: 0;
+	padding: 0;
+}
+
+.sffilters-filter__title {
+	font-weight: 600;
+	margin: 0 0 0.5rem;
+	padding: 0;
+}
+
+.sffilters-options {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.sffilters-options .sffilters-options {
+	margin-left: 1.5rem;
+}
+
+.sffilters-option {
+	margin: 0;
+}
+
+.sffilters-option__control {
+	align-items: baseline;
+	cursor: pointer;
+	display: flex;
+	gap: 0.5rem;
+	padding: 0.2rem 0;
+}
+
+.sffilters-option__control input {
+	flex: none;
+	margin: 0;
+}
+
+.sffilters-option__label {
+	flex: 1;
+	min-width: 0;
+}
+
+.sffilters-option__count {
+	font-size: 0.875em;
+	font-variant-numeric: tabular-nums;
+	opacity: 0.7;
+}
+
+.sffilters-range {
+	align-items: center;
+	display: flex;
+	gap: 0.5rem;
+}
+
+.sffilters-range__end {
+	flex: 1;
+	min-width: 0;
+}
+
+.sffilters-range__end input {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+[data-sffilters-results] {
+	transition: opacity 0.15s;
+}
+
+.sffilters-loading [data-sffilters-results] {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-sffilters-results] {
+		transition: none;
+	}
+}

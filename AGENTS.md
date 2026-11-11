@@ -24,6 +24,15 @@ The previous attempt in this repository grew into an enterprise search platform 
 4. Counts come from one grouped SQL query per filter over the filtered product set.
 5. `assets/filters.js` fetches the new URL and swaps the products, result count, pagination and panel. Without JavaScript every filter is a normal link or form.
 
+## Where things are
+
+- `src/Filter/` holds one class per filter source: taxonomy, price, stock, sale. A filter parses its URL value, returns query conditions and lists its choices with counts.
+- `src/State.php` reads the filter values from the URL.
+- `src/Query.php` turns state into `WP_Query` vars. Price, stock and sale go through the WooCommerce product lookup table.
+- `src/Integration/` holds one class per product list the plugin can filter. `MainQuery` covers the WooCommerce shop and archive pages.
+- `src/Panel.php` renders the `[sffilters]` form. `assets/filters.js` swaps the results and the panel.
+- `src/Settings.php` reads `sffilters_settings` and builds the filters.
+
 ## Conventions
 
 - Namespace `Starfiniti\Filters`, PSR-4 under `src/`.
