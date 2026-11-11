@@ -32,9 +32,19 @@ jobs:
       - name: Provision pinned PHP, MariaDB, WordPress, WooCommerce and WP-CLI
         shell: pwsh
         run: pnpm wordpress:setup
+      - name: Generate requirement-linked release evidence
+        shell: pwsh
+        run: pnpm package
       - name: Run qualification suites
         shell: pwsh
-        run: pnpm test:all
+        env:
+          # Licensed and ignored reference archives must never be uploaded to GitHub.
+          # CI validates their committed manifest; local qualification re-audits bytes.
+          STARFINITI_UPSTREAM_AUDIT_MODE: recorded
+        run: |
+          pnpm wordpress:start
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm test:all
       - name: Reproduce, install, and qualify the exact release artifact
         shell: pwsh
         run: pnpm qualify:artifact
@@ -44,6 +54,7 @@ jobs:
           name: starfiniti-search-qualification
           path: |
             dist/starfiniti-search.zip
+            dist/starfiniti-search-ai-skill-*.zip
             dist/starfiniti-search.cdx.json
             dist/release-manifest.json
           if-no-files-found: error

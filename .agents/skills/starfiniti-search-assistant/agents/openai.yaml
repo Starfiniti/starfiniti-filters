@@ -1,0 +1,4 @@
+interface:
+  display_name: "Starfiniti Search Assistant"
+  short_description: "Set up, troubleshoot, and design Starfiniti Search"
+  default_prompt: "Use $starfiniti-search-assistant to help me use or design for Starfiniti Search without requesting credentials or changing my site."

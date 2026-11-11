@@ -81,7 +81,7 @@ final class Plugin
         add_action('before_woocommerce_init', [self::class, 'declareWooCommerceCompatibility']);
         add_action('rest_api_init', [new SearchController($provider, $health, $analytics, $logger), 'register']);
         add_action('rest_api_init', [new ControlController($health, $configuration, $operations, $operationExecutor, $provider), 'register']);
-        add_action('init', [new SearchShortcode(), 'register']);
+        add_action('init', [new SearchShortcode($configuration), 'register']);
         add_action('starfiniti_search_process_outbox', [$worker, 'run'], 10, 1);
         add_action('starfiniti_search_seed_catalog', [$seeder, 'run'], 10, 1);
         add_action('starfiniti_search_build_generation', [$builder, 'run'], 10, 2);

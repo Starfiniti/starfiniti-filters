@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+config_file="${STARFINITI_FIREWALL_CONFIG:-/etc/starfiniti-observability/firewall.env}"
+
+fail() {
+  printf 'starfiniti-firewall: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ ${1:-} == "--apply" ]] || fail "refusing to change firewall state without --apply"
+[[ $EUID -eq 0 ]] || fail "run as root"
+[[ -f "$config_file" && -r "$config_file" ]] || fail "configuration is not readable: $config_file"
+[[ $(stat -c %u "$config_file") == "0" ]] || fail "configuration must be owned by root"
+[[ $(stat -c %a "$config_file") == "600" ]] || fail "configuration mode must be 0600"
+
+# shellcheck source=/dev/null
+source "$config_file"
+
+: "${STARFINITI_PRIVATE_INTERFACE:?STARFINITI_PRIVATE_INTERFACE is required}"
+: "${STARFINITI_LOCAL_IP:?STARFINITI_LOCAL_IP is required}"
+: "${STARFINITI_ALLOWED_SOURCE:?STARFINITI_ALLOWED_SOURCE is required}"
+: "${STARFINITI_PUBLISHED_PORT:?STARFINITI_PUBLISHED_PORT is required}"
+
+[[ "$STARFINITI_PRIVATE_INTERFACE" =~ ^[A-Za-z0-9_.:-]+$ ]] || fail "invalid private interface"
+[[ "$STARFINITI_LOCAL_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || fail "invalid local IPv4 address"
+[[ "$STARFINITI_ALLOWED_SOURCE" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || fail "invalid source IPv4 address"
+[[ "$STARFINITI_PUBLISHED_PORT" =~ ^[0-9]+$ ]] || fail "invalid published port"
+((STARFINITI_PUBLISHED_PORT >= 1 && STARFINITI_PUBLISHED_PORT <= 65535)) || fail "published port is out of range"
+
+for command_name in ip iptables stat ufw; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
+done
+
+ip link show dev "$STARFINITI_PRIVATE_INTERFACE" >/dev/null 2>&1 || fail "private interface does not exist"
+ip -o -4 addr show dev "$STARFINITI_PRIVATE_INTERFACE" |
+  awk '{ print $4 }' |
+  grep -Eq "^${STARFINITI_LOCAL_IP//./\\.}/" || fail "local IP is not assigned to the private interface"
+iptables -nL DOCKER-USER >/dev/null 2>&1 || fail "Docker DOCKER-USER chain is unavailable"
+
+rule_tag="starfiniti-${STARFINITI_PUBLISHED_PORT}-private-ingress"
+allow_rule=(
+  -i "$STARFINITI_PRIVATE_INTERFACE"
+  -p tcp
+  -s "$STARFINITI_ALLOWED_SOURCE"
+  --dport "$STARFINITI_PUBLISHED_PORT"
+  -m comment --comment "$rule_tag-allow"
+  -j ACCEPT
+)
+drop_rule=(
+  -i "$STARFINITI_PRIVATE_INTERFACE"
+  -p tcp
+  --dport "$STARFINITI_PUBLISHED_PORT"
+  -m comment --comment "$rule_tag-drop"
+  -j DROP
+)
+
+while iptables -C DOCKER-USER "${allow_rule[@]}" 2>/dev/null; do
+  iptables -D DOCKER-USER "${allow_rule[@]}"
+done
+while iptables -C DOCKER-USER "${drop_rule[@]}" 2>/dev/null; do
+  iptables -D DOCKER-USER "${drop_rule[@]}"
+done
+
+iptables -I DOCKER-USER 1 "${drop_rule[@]}"
+iptables -I DOCKER-USER 1 "${allow_rule[@]}"
+
+ufw allow in on "$STARFINITI_PRIVATE_INTERFACE" proto tcp \
+  from "$STARFINITI_ALLOWED_SOURCE" to "$STARFINITI_LOCAL_IP" \
+  port "$STARFINITI_PUBLISHED_PORT" comment "$rule_tag"
+
+iptables -C DOCKER-USER "${allow_rule[@]}"
+iptables -C DOCKER-USER "${drop_rule[@]}"
+printf 'starfiniti-firewall: restricted TCP/%s on %s to %s\n' \
+  "$STARFINITI_PUBLISHED_PORT" "$STARFINITI_PRIVATE_INTERFACE" "$STARFINITI_ALLOWED_SOURCE"

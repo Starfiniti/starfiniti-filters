@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly encrypted Starfiniti Proxmox backup
+
+[Timer]
+OnCalendar=*-*-* 01:30:00 Europe/Ljubljana
+RandomizedDelaySec=20m
+Persistent=true
+Unit=starfiniti-pve-borg-backup.service
+
+[Install]
+WantedBy=timers.target

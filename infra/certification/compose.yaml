@@ -1,0 +1,38 @@
+name: starfiniti-search-certification
+
+services:
+  typesense:
+    image: typesense/typesense@sha256:610f2d34b1f93d00762869da2c67736775e5798d19a2c8b91b014b8a0cc1e110
+    command:
+      - --config=/etc/typesense/typesense-server.ini
+    user: "10001:10001"
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    cpus: 2.0
+    mem_limit: 3g
+    stop_grace_period: 2m
+    ports:
+      - "127.0.0.1:8108:8108"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,uid=10001,gid=10001
+    volumes:
+      - /etc/starfiniti-search/typesense-server.ini:/etc/typesense/typesense-server.ini:ro
+      - /srv/starfiniti-search/typesense/data:/data
+      - /srv/starfiniti-search/typesense/logs:/var/log/typesense
+      - /srv/starfiniti-search/typesense/snapshots:/snapshots
+    networks:
+      - search_private
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+networks:
+  search_private:
+    internal: true

@@ -1,0 +1,9 @@
+[server]
+api-key = <generate-and-store-outside-the-repository>
+data-dir = /data
+log-dir = /var/log/typesense
+api-port = 8108
+listen-address = 0.0.0.0
+enable-cors = false
+enable-search-logging = false
+snapshot-interval-seconds = 3600

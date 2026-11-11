@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) {
     $env:STARFINITI_SEARCH_RUNTIME_ROOT
@@ -65,6 +66,13 @@ function Get-WebProcess {
     } | Select-Object -First 1
 }
 
+function Set-QualificationUpdatePolicy {
+    # This is the disposable, version-pinned test site, not a production policy.
+    # Set these before any WordPress bootstrap can schedule an automatic update.
+    Invoke-WpCli config set AUTOMATIC_UPDATER_DISABLED true --raw | Out-Null
+    Invoke-WpCli config set WP_AUTO_UPDATE_CORE false --raw | Out-Null
+}
+
 function Setup-WordPress {
     powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'local-runtime.ps1') setup
     if ($LASTEXITCODE -ne 0) { throw 'Local runtime setup failed.' }
@@ -101,6 +109,7 @@ FLUSH PRIVILEGES;
     Invoke-WpCli config set WP_DEBUG_DISPLAY false --raw
     Invoke-WpCli config set DISALLOW_FILE_EDIT true --raw
 
+    Set-QualificationUpdatePolicy
     if (-not (Test-WpCli core is-installed)) {
         Invoke-WpCli core install --url=$siteUrl --title='Starfiniti Search Qualification' --admin_user=admin --admin_password=$($secrets.WORDPRESS_ADMIN_PASSWORD) --admin_email=admin@starfiniti.invalid --skip-email
     }
@@ -113,7 +122,7 @@ FLUSH PRIVILEGES;
             Invoke-WebRequest -Uri $lock.woocommerce.distributionUrl -OutFile $wooArchive -UseBasicParsing
         }
     }
-    $wooHash = (Get-FileHash -LiteralPath $wooArchive -Algorithm SHA256).Hash
+    $wooHash = (Get-StarfinitiFileHash -LiteralPath $wooArchive -Algorithm SHA256).Hash
     if ($wooHash -ne $lock.woocommerce.sha256) { throw 'WooCommerce archive checksum mismatch.' }
     if (-not (Test-WpCli plugin is-installed woocommerce)) { Invoke-WpCli plugin install $wooArchive }
     if (-not (Test-WpCli plugin is-active woocommerce)) { Invoke-WpCli plugin activate woocommerce }
@@ -122,7 +131,7 @@ FLUSH PRIVILEGES;
     if (-not (Test-Path -LiteralPath $pluginCheckArchive)) {
         Invoke-WebRequest -Uri $lock.pluginCheck.distributionUrl -OutFile $pluginCheckArchive -UseBasicParsing
     }
-    $pluginCheckHash = (Get-FileHash -LiteralPath $pluginCheckArchive -Algorithm SHA256).Hash
+    $pluginCheckHash = (Get-StarfinitiFileHash -LiteralPath $pluginCheckArchive -Algorithm SHA256).Hash
     if ($pluginCheckHash -ne $lock.pluginCheck.sha256) { throw 'Plugin Check archive checksum mismatch.' }
     if (-not (Test-WpCli plugin is-installed plugin-check)) { Invoke-WpCli plugin install $pluginCheckArchive }
     if (-not (Test-WpCli plugin is-active plugin-check)) { Invoke-WpCli plugin activate plugin-check }
@@ -144,6 +153,12 @@ FLUSH PRIVILEGES;
 }
 
 function Start-WordPress {
+    if (-not (Test-Path -LiteralPath (Join-Path $siteRoot 'wp-config.php'))) { throw 'Run wordpress-runtime.ps1 setup first.' }
+    Set-QualificationUpdatePolicy
+    $installedVersion = (Invoke-WpCli core version | Out-String).Trim()
+    if ($installedVersion -cne $lock.wordpress.version) {
+        throw "Qualification core version drifted: expected $($lock.wordpress.version), found $installedVersion. Preserve local data and restore the pinned core before starting."
+    }
     powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'local-runtime.ps1') start
     if ($LASTEXITCODE -ne 0) { throw 'Local MariaDB startup failed.' }
     $existing = Get-WebProcess
@@ -151,16 +166,17 @@ function Start-WordPress {
         Write-Output "WordPress is already running at $siteUrl (PID $($existing.ProcessId))."
         return
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $siteRoot 'wp-config.php'))) { throw 'Run wordpress-runtime.ps1 setup first.' }
     New-Item -ItemType Directory -Force -Path $logsRoot | Out-Null
     $stdout = Join-Path $logsRoot 'wordpress.stdout.log'
     $stderr = Join-Path $logsRoot 'wordpress.stderr.log'
     $process = Start-Process -FilePath $php -ArgumentList '-S', $serverMarker -WorkingDirectory $siteRoot -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
-    for ($attempt = 0; $attempt -lt 40; $attempt++) {
+    # The built-in server handles requests serially. Repeated two-second probes
+    # queue more work behind a cold bootstrap even after the client times out.
+    for ($attempt = 0; $attempt -lt 3; $attempt++) {
         Start-Sleep -Milliseconds 250
         if ($process.HasExited) { throw "PHP web server exited with code $($process.ExitCode). See $stderr." }
         try {
-            $response = Invoke-WebRequest -Uri $siteUrl -UseBasicParsing -TimeoutSec 2
+            $response = Invoke-WebRequest -Uri $siteUrl -UseBasicParsing -TimeoutSec 15
             if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
                 Write-Output "WordPress is ready at $siteUrl (PID $($process.Id))."
                 return

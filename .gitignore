@@ -3,10 +3,13 @@
 /.phpunit.cache/
 /.phpunit.result.cache
 /coverage/
+**/__pycache__/
+**/*.pyc
 **/dist/
 **/node_modules/
 **/vendor/
 /.runtime/
+/.cache/
 /.env
 /.env.*
 !/.env.example

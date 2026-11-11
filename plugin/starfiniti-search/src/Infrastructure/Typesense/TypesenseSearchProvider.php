@@ -69,6 +69,9 @@ final class TypesenseSearchProvider implements SearchProvider
 
     public function search(array $request): array
     {
+        if (($request['options']['facet_mode'] ?? 'conjunctive') !== 'conjunctive') {
+            throw new \InvalidArgumentException('This adapter does not support alternative facet counts.');
+        }
         if ($this->circuitOpenedAt > 0 && time() - $this->circuitOpenedAt < 30) {
             throw new ProviderUnavailable('Typesense circuit is open.');
         }

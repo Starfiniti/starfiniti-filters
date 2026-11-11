@@ -1,0 +1,50 @@
+{
+  "recorded_at": "2026-08-10T20:00:00Z",
+  "platform": "linux/amd64",
+  "docker": {
+    "repository": "https://download.docker.com/linux/ubuntu",
+    "distribution": "noble",
+    "signing_key_fingerprint": "9DC858229FC7DD38854AE2D88D81803C0EBFCD88",
+    "packages": {
+      "docker-ce": "5:29.7.2-1~ubuntu.24.04~noble",
+      "docker-ce-cli": "5:29.7.2-1~ubuntu.24.04~noble",
+      "containerd.io": "2.3.3-1~ubuntu.24.04~noble",
+      "docker-buildx-plugin": "0.36.1-1~ubuntu.24.04~noble",
+      "docker-compose-plugin": "5.4.0-1~ubuntu.24.04~noble"
+    }
+  },
+  "images": {
+    "typesense": {
+      "version": "30.2",
+      "image": "typesense/typesense",
+      "manifest_digest": "sha256:610f2d34b1f93d00762869da2c67736775e5798d19a2c8b91b014b8a0cc1e110",
+      "amd64_digest": "sha256:b405d4443bdb9254fab4792b7fd9ee95d969f3b5485975917a3a3f84274eba27",
+      "validation_binary_sha256": "cd791605e7c6cc7be457794f534cd4b9f9d361781adb10e40020efc22840ebc3"
+    },
+    "prometheus": {
+      "version": "3.13.2",
+      "image": "prom/prometheus",
+      "manifest_digest": "sha256:508729e0e2d18e11fd742a5a5ca70e557b940a93948c3c95fd0123a6fd538b69"
+    },
+    "grafana": {
+      "version": "13.0.6",
+      "image": "grafana/grafana",
+      "manifest_digest": "sha256:035dfe16f7a3a109b54f2ac032232b07d069aa732156480555b2391fc0a32813"
+    },
+    "loki": {
+      "version": "3.6.15",
+      "image": "grafana/loki",
+      "manifest_digest": "sha256:a678400d75866739e70cf413de834b929c8ac500256bc6beedf17a91ab6430a3"
+    },
+    "alloy": {
+      "version": "1.18.1",
+      "image": "grafana/alloy",
+      "manifest_digest": "sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33"
+    },
+    "node_exporter": {
+      "version": "1.12.1",
+      "image": "prom/node-exporter",
+      "manifest_digest": "sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0"
+    }
+  }
+}

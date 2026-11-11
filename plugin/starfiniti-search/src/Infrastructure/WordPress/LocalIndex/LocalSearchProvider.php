@@ -10,6 +10,7 @@ use Starfiniti\Search\Domain\Search\Tokenizer;
 use Starfiniti\Search\Domain\Search\EditDistance;
 use Starfiniti\Search\Domain\Search\RankingProfile;
 use Starfiniti\Search\Domain\Search\RelevancePolicy;
+use Starfiniti\Search\Domain\Search\FacetFilter;
 use Starfiniti\Search\Infrastructure\WordPress\Configuration\ConfigurationRepository;
 use wpdb;
 
@@ -126,6 +127,12 @@ final class LocalSearchProvider implements SearchProvider
             $params[] = '% ' . $this->db->esc_like($phrase) . ' %';
         }
 
+        $facetQueryWhere = $where;
+        $facetQueryParams = $params;
+        $facetMode = $request['options']['facet_mode'] ?? 'conjunctive';
+        if (!in_array($facetMode, ['conjunctive', 'disjunctive'], true)) {
+            throw new InvalidArgumentException('Unsupported facet mode.');
+        }
         $budget = 32;
         $requestFilter = $request['filters'] ?? null;
         if ($curation['filter'] !== null) {
@@ -325,7 +332,21 @@ final class LocalSearchProvider implements SearchProvider
         }
 
         $facetKeys = $this->facetKeys($request['facets'] ?? []);
-        $facets = $this->facetCounts($facetKeys, $from, $where, $params, $generation, $documents, $pinnedWhere, $pinnedParams, $visiblePinnedIds);
+        $facets = [];
+        if ($facetMode === 'disjunctive') {
+            foreach ($facetKeys as $key) {
+                $alternativeFilter = FacetFilter::withoutSelection($request['filters'] ?? null, $key);
+                if ($curation['filter'] !== null) {
+                    $alternativeFilter = $alternativeFilter === null ? $curation['filter']['filter'] : ['and' => [$curation['filter']['filter'], $alternativeFilter]];
+                }
+                $facetBudget = 32;
+                [$alternativeSql, $alternativeParams] = $this->compileFilter($alternativeFilter, $generation, $facetBudget, 0);
+                $suffix = $alternativeSql === '' ? '' : ' AND ' . $alternativeSql;
+                $facets += $this->facetCounts([$key], $from, $facetQueryWhere . $suffix, [...$facetQueryParams, ...$alternativeParams], $generation, $documents, $baseWhere . $suffix, [...$baseParams, ...$alternativeParams], $curation['pins']);
+            }
+        } else {
+            $facets = $this->facetCounts($facetKeys, $from, $where, $params, $generation, $documents, $pinnedWhere, $pinnedParams, $visiblePinnedIds);
+        }
         $warnings = [];
         if ($totalIsLowerBound) {
             $warnings[] = 'total_is_lower_bound:' . $candidateLimit;

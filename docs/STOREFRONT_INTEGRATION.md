@@ -14,6 +14,14 @@
 
 The discovery URL parameters are `s`, repeated `sfs_stock`, repeated `sfs_category`, `sfs_sort`, and `sfs_page`. Only allow-listed values are compiled into the canonical request; the server independently validates all filters, sorting, pagination, locale, channel, public visibility, and scope.
 
+## Configured discovery candidate
+
+Optional immutable `discovery.filters` binds ordered checkbox, radio, select and exact minor-unit price controls to indexed fields and owned URL parameters (see `LOCAL_DELIVERY_PLAN.md`). Configured stock/category controls replace the equivalent defaults. Empty groups are hidden; selected zero-count choices remain removable. Labels use human-readable stock and featured values.
+
+The layout inherits the embedding theme. Containers at least 800 px wide use a sidebar; narrower containers use a native modal filter panel with a scrolling body, visible close/clear/show-results controls, Escape dismissal and focus restoration. Facet rows are reconciled in place to preserve keyboard focus across responses. Selected chips remove individual filters. **Clear filters preserves the search query and sort**; Reset search explicitly clears everything. Invalid price ranges have field-associated errors; unavailable responses expose a retry action without losing state.
+
+Discovery requests opt into canonical `options.facet_mode = "disjunctive"`. The local index calculates each facet with positive same-field shopper selections removed from conjunctive filter branches. Other fields, OR/NOT restrictions, locale, public visibility, customer scope and merchandising restrictions remain in force. Visible pinned products participate in alternative counts. The default API mode remains `conjunctive`; the optional Typesense adapter rejects alternative-count mode rather than claiming support. This is not a claim of full FiboFilters semantic parity or representative-catalog latency qualification.
+
 ## JavaScript events
 
 Events bubble from the owning component and contain normalized identifiers and counts, never raw product HTML or credentials:

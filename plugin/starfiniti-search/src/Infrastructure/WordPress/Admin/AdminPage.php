@@ -152,6 +152,7 @@ final class AdminPage
             delete_transient('sfs_admin_error_' . get_current_user_id());
         }
         $setup = is_array($report['setup'] ?? null) ? $report['setup'] : ['status' => 'blocked', 'steps' => []];
+        $skillVersion = defined('STARFINITI_SEARCH_VERSION') ? (string) STARFINITI_SEARCH_VERSION : 'unknown';
         /* translators: %s is the current setup readiness status. */
         $setupStatusText = sprintf(__('Setup status: %s. This assessment validates current evidence and never represents release certification.', 'starfiniti-search'), (string) ($setup['status'] ?? 'blocked'));
         ?>
@@ -159,6 +160,20 @@ final class AdminPage
             <h1><?php echo esc_html__('Starfiniti Search operations', 'starfiniti-search'); ?></h1>
             <?php if (is_string($adminError) && $adminError !== '') : ?><div class="notice notice-error"><p><?php echo esc_html($adminError); ?></p></div><?php endif; ?>
             <p><?php echo esc_html__('Live status, versioned index builds, activation, and rollback. No credentials are displayed here.', 'starfiniti-search'); ?></p>
+            <h2><?php echo esc_html__('Optional AI assistant skill', 'starfiniti-search'); ?></h2>
+            <p><?php echo esc_html__('The version-matched Starfiniti Search Assistant provides guidance for setup, troubleshooting, storefront placement, and compatible prototype design. It does not connect to or modify this site, and you must not share credentials, customer data, database dumps, or unredacted logs with an AI service.', 'starfiniti-search'); ?></p>
+            <p>
+                <?php
+                /* translators: %s is the version of the bundled Starfiniti Search Assistant skill. */
+                echo esc_html(sprintf(__('Bundled assistant version: %s.', 'starfiniti-search'), $skillVersion));
+                ?>
+                <?php echo esc_html__('The unpacked skill is included in this plugin under ai/starfiniti-search-assistant.', 'starfiniti-search'); ?>
+            </p>
+            <ul>
+                <li><?php echo wp_kses_post(__('<strong>Codex:</strong> copy the skill folder to <code>~/.agents/skills/starfiniti-search-assistant</code>, then invoke <code>$starfiniti-search-assistant</code>.', 'starfiniti-search')); ?></li>
+                <li><?php echo wp_kses_post(__('<strong>Claude Code:</strong> copy the same folder to <code>~/.claude/skills/starfiniti-search-assistant</code>, then invoke <code>/starfiniti-search-assistant</code>.', 'starfiniti-search')); ?></li>
+            </ul>
+            <p><?php echo esc_html__('A directly installable companion skill ZIP is supplied with each qualified published release. This qualification build is not a published release.', 'starfiniti-search'); ?></p>
             <h2><?php echo esc_html__('Setup readiness assessment', 'starfiniti-search'); ?></h2>
             <p><?php echo esc_html($setupStatusText); ?></p>
             <table class="widefat striped"><thead><tr><th><?php echo esc_html__('Step', 'starfiniti-search'); ?></th><th><?php echo esc_html__('Status', 'starfiniti-search'); ?></th><th><?php echo esc_html__('Evidence', 'starfiniti-search'); ?></th><th><?php echo esc_html__('Next action', 'starfiniti-search'); ?></th></tr></thead><tbody>

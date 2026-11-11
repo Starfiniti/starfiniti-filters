@@ -2,7 +2,7 @@
   "project": "Starfiniti Search for WooCommerce",
   "current_gate": 5,
   "last_passing_commit": null,
-  "updated_at_utc": "2026-08-09T19:59:03.033Z",
+  "updated_at_utc": "2026-08-10T17:02:29.876Z",
   "requirements": {
     "complete": [
       "ADM-001",
@@ -151,21 +151,21 @@
     "full_regression": {
       "status": "passed",
       "command": "pnpm test:all",
-      "duration_seconds": 106.2,
+      "duration_seconds": 108.1,
       "source_tree_sha256": "2080955E96C7BAE8A42316CB4DE9A823342D5FC4AA86B50EC6748F633FEB80F4",
-      "run_at_utc": "2026-08-09T19:59:03.033Z"
+      "run_at_utc": "2026-08-10T16:58:00.000Z"
     },
     "exact_artifact": {
       "status": "passed",
       "command": "pnpm qualify:artifact",
-      "duration_seconds": 102,
+      "duration_seconds": 89,
       "files": 74,
       "bytes": 422590,
       "zip_sha256": "2F2E56DDE074C526BDB9AA672825414D35F5AE749C3950A88CF35B6BD144C8C5",
       "sbom_sha256": "B6E487BB453B672F45830D3A74205DC3B02169677B01B3866047DA903546BD90",
       "manifest_sha256": "57B2B9B981D79B1791CF36CB11B3E75E6E0B5FA92A673BE1C095D26B324C827D",
       "plugin_check": "2.0.0; no errors or warnings",
-      "run_at_utc": "2026-08-09T19:55:24.000Z"
+      "run_at_utc": "2026-08-10T17:02:00.000Z"
     },
     "integration": {
       "status": "passed",
@@ -174,14 +174,14 @@
     },
     "mcp": {
       "status": "passed",
-      "result": "6 official-SDK protocol tests plus live localhost status/configuration/dry-run planning; 0 temporary Application Passwords remain",
-      "environment": "Node.js 24.14.0; @modelcontextprotocol/sdk 1.30.0",
-      "run_at_utc": "2026-08-09T19:56:00.000Z"
+      "result": "9 official v2 SDK tests including modern server/discover, OAuth metadata/challenge, RFC 9068 JWT/JWKS policy, revocation, per-request principal isolation, and legacy stdio; live localhost status/configuration/dry-run planning passed with zero temporary credentials remaining",
+      "environment": "Node.js 24.14.0; @modelcontextprotocol/server 2.0.0; @modelcontextprotocol/client 2.0.0",
+      "run_at_utc": "2026-08-10T17:00:00.000Z"
     },
     "dependency_audit": {
       "status": "passed",
       "result": "pnpm audit --prod --audit-level high: no known vulnerabilities",
-      "run_at_utc": "2026-08-09T19:39:00.000Z"
+      "run_at_utc": "2026-08-10T16:54:00.000Z"
     }
   },
   "known_failures": [],
@@ -189,11 +189,11 @@
     "Real Typesense activation, rollback, import-result parsing, and version certification are not yet container-qualified.",
     "Licensed relevance corpus and approved business thresholds are unavailable.",
     "Strict end-to-end HTTP performance budget requires final environment tuning and rerun.",
-    "Remote MCP OAuth/JWT transport and deployment observability remain outside the current local stdio qualification boundary."
+    "Remote MCP transport and authorization pass local modern-protocol tests, but Auth0, TLS, firewall, observability, and named-client interoperability remain uncertified on deployed infrastructure."
   ],
   "next_legal_actions": [
     "Provide licensed golden relevance judgments or approve a clean-room relevance corpus and thresholds.",
-    "Approve and provision supported Typesense versions for real-container certification.",
+    "Restore a safe memory margin on Proxmox s2, then provision the approved certification VM and observability container.",
     "Confirm the final WordPress.org slug, display name, and trademark position.",
     "Submit only the exact qualified ZIP after all mandatory release gates pass."
   ]

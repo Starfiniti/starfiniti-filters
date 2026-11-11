@@ -26,4 +26,12 @@ The source contains a provider-neutral Typesense search adapter, but the product
 3. Run the common provider conformance suite for visibility, pagination, filtering, facets, relevance, partial writes, activation, and rollback.
 4. Record exact environment/version evidence and approve a configuration revision that removes the certification guard.
 
+Credential-free deployment and service-probe assets live under
+`infra/certification`. The probe covers exact 30.2 version detection,
+least-privilege key separation, per-line import failures, mandatory visibility
+filtering, alias rollback, and v30 relevance resources. Passing it does not remove
+the activation guard: the exact installed plugin must still pass the complete
+real-container conformance, relevance, resilience, snapshot/restore, and strict
+latency suites.
+
 Native Windows execution is not used as substitute evidence because it is not a supported Typesense server deployment path.

@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) { $env:STARFINITI_SEARCH_RUNTIME_ROOT } else { Join-Path $env:LOCALAPPDATA 'StarfinitiSearch\starfiniti-filters' }
 $lock = Get-Content (Join-Path $repoRoot 'config\runtime-lock.json') -Raw | ConvertFrom-Json
@@ -89,7 +90,7 @@ function Setup-Baseline {
     if (-not (Test-Wp --skip-plugins --skip-themes plugin is-active starfiniti-golden-fixtures)) { Invoke-Wp plugin activate starfiniti-golden-fixtures }
 
     $filtersArchive = Join-Path $repoRoot 'audit\packages\fibofilters-pro.1.12.1.zip'
-    if ((Get-FileHash $filtersArchive -Algorithm SHA256).Hash -ne '3E8FEFBFE1C1FBA3126E691F67F2D1C5437E39AC33D5AB6DE44BD912456355D2') { throw 'FiboFilters package checksum mismatch.' }
+    if ((Get-StarfinitiFileHash $filtersArchive -Algorithm SHA256).Hash -ne '3E8FEFBFE1C1FBA3126E691F67F2D1C5437E39AC33D5AB6DE44BD912456355D2') { throw 'FiboFilters package checksum mismatch.' }
     if (-not (Test-Wp --skip-plugins --skip-themes plugin is-installed fibofilters-pro)) { Invoke-Wp plugin install $filtersArchive }
     if (-not (Test-Wp --skip-plugins --skip-themes plugin is-active fibofilters-pro)) { Invoke-Wp plugin activate fibofilters-pro }
     Invoke-Wp option update permalink_structure '/%postname%/'
@@ -133,4 +134,3 @@ switch ($Action) {
     'stop' { Stop-Baseline }
     'status' { Show-Status }
 }
-

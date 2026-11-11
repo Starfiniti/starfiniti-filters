@@ -1,0 +1,42 @@
+groups:
+  - name: starfiniti-infrastructure
+    rules:
+      - alert: StarfinitiTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Metrics target {{ $labels.instance }} is down"
+
+      - alert: StarfinitiHostMemoryHigh
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory use exceeds 85 percent on {{ $labels.host }}"
+
+      - alert: StarfinitiHostMemoryCritical
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Memory use exceeds 95 percent on {{ $labels.host }}"
+
+      - alert: StarfinitiFilesystemLow
+        expr: 100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"} < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Filesystem free space is below 15 percent on {{ $labels.host }}"
+
+      - alert: StarfinitiFilesystemCritical
+        expr: 100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"} < 8
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Filesystem free space is below 8 percent on {{ $labels.host }}"

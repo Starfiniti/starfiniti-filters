@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'powershell-compat.ps1')
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:STARFINITI_SEARCH_RUNTIME_ROOT) {
     $env:STARFINITI_SEARCH_RUNTIME_ROOT
@@ -18,7 +19,7 @@ $secretsPath = Join-Path $stateRoot 'runtime.env'
 
 function Assert-Hash {
     param([string] $Path, [string] $Algorithm, [string] $Expected)
-    $actual = (Get-FileHash -LiteralPath $Path -Algorithm $Algorithm).Hash
+    $actual = (Get-StarfinitiFileHash -LiteralPath $Path -Algorithm $Algorithm).Hash
     if ($actual -ne $Expected.ToUpperInvariant()) {
         throw "Checksum mismatch for $Path. Expected $Expected, got $actual."
     }

@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: certification
+    project: starfiniti-search
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: ops-container
+    static_configs:
+      - targets: [node-exporter:9100]
+        labels:
+          host: starfiniti-search-ops
+
+  - job_name: certification-vm
+    static_configs:
+      - targets: [10.10.10.60:9100]
+        labels:
+          host: starfiniti-search-cert

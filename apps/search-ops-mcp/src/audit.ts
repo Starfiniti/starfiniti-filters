@@ -1,4 +1,4 @@
-import { appendFile } from 'node:fs/promises';
+import { appendFile, rename, stat, unlink } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import type { AuditRecord } from './types.js';
 
@@ -36,17 +36,44 @@ export class MemoryAuditSink implements AuditSink {
 
 export class JsonLineAuditSink implements AuditSink {
   readonly #memory = new MemoryAuditSink();
-  public constructor(private readonly path: string) {
+  #pending = Promise.resolve();
+  public constructor(private readonly path: string, private readonly maximumBytes = 50 * 1024 * 1024, private readonly rotations = 14) {
     if (!path || path.length > 2048) throw new Error('Audit path is invalid.');
+    if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 1024 || maximumBytes > 1024 * 1024 * 1024) throw new Error('Audit size limit is invalid.');
+    if (!Number.isSafeInteger(rotations) || rotations < 1 || rotations > 100) throw new Error('Audit rotation count is invalid.');
   }
 
   public async append(record: AuditRecord): Promise<void> {
-    await appendFile(this.path, `${JSON.stringify(record)}\n`, { encoding: 'utf8', mode: 0o600, flag: 'a' });
-    await this.#memory.append(record);
+    const line = `${JSON.stringify(record)}\n`;
+    const operation = this.#pending.then(async () => {
+      await this.#rotateIfNeeded(Buffer.byteLength(line, 'utf8'));
+      await appendFile(this.path, line, { encoding: 'utf8', mode: 0o600, flag: 'a' });
+      await this.#memory.append(record);
+    });
+    this.#pending = operation.catch(() => undefined);
+    await operation;
   }
 
   public list(limit: number): Promise<AuditRecord[]> {
     return this.#memory.list(limit);
+  }
+
+  async #rotateIfNeeded(incomingBytes: number): Promise<void> {
+    if (incomingBytes > this.maximumBytes) throw new Error('Audit record exceeds the configured file-size bound.');
+    let currentBytes = 0;
+    try { currentBytes = (await stat(this.path)).size; } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    if (currentBytes === 0 || currentBytes + incomingBytes <= this.maximumBytes) return;
+    await unlink(`${this.path}.${this.rotations}`).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'ENOENT') throw error;
+    });
+    for (let index = this.rotations - 1; index >= 1; index -= 1) {
+      await rename(`${this.path}.${index}`, `${this.path}.${index + 1}`).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== 'ENOENT') throw error;
+      });
+    }
+    await rename(this.path, `${this.path}.1`);
   }
 }
 

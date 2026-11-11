@@ -43,7 +43,7 @@ try {
     wp_set_current_user($previousUser);
 }
 
-foreach (['Setup readiness assessment', 'Smoke test and activation', 'never represents release certification', 'Attempts / lease expiry', 'Last build update', 'sfs_synonyms_json', 'sfs_stop_words_json', 'sfs_curations_json', 'sfs_change_reason', 'Relevance laboratory', 'Blue Alpine Shirt', 'recognized_identifier', 'local-default-v1'] as $required) {
+foreach (['Optional AI assistant skill', 'does not connect to or modify this site', '0.3.0-alpha.1', '~/.agents/skills/starfiniti-search-assistant', '~/.claude/skills/starfiniti-search-assistant', 'qualification build is not a published release', 'Setup readiness assessment', 'Smoke test and activation', 'never represents release certification', 'Attempts / lease expiry', 'Last build update', 'sfs_synonyms_json', 'sfs_stop_words_json', 'sfs_curations_json', 'sfs_change_reason', 'Relevance laboratory', 'Blue Alpine Shirt', 'recognized_identifier', 'local-default-v1'] as $required) {
     if (!str_contains($html, $required)) {
         throw new RuntimeException('Administrator relevance surface is missing: ' . $required);
     }

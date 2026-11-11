@@ -1,0 +1,20 @@
+[Unit]
+Description=Starfiniti Borg retention, compaction, and repository check
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=STARFINITI_BACKUP_CONFIG=/etc/starfiniti-backup/pve-borg-maintenance.env
+ExecStart=/usr/local/sbin/starfiniti-pve-borg-maintain
+UMask=0077
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+ReadOnlyPaths=/etc/starfiniti-backup
+ReadWritePaths=/var/cache/starfiniti-borg-maintenance /var/lib/starfiniti-borg-maintenance /run/lock
+Environment=BORG_CACHE_DIR=/var/cache/starfiniti-borg-maintenance
+Environment=BORG_SECURITY_DIR=/var/lib/starfiniti-borg-maintenance/security
+CacheDirectory=starfiniti-borg-maintenance
+StateDirectory=starfiniti-borg-maintenance
+TimeoutStartSec=24h

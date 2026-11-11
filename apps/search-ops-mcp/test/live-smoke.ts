@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { MemoryAuditSink } from '../src/audit.js';
 import { EnvironmentCredentialResolver, SearchControlClient } from '../src/control-client.js';
 import { localPrincipalFromEnvironment } from '../src/security.js';
