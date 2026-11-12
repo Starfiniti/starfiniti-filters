@@ -33,6 +33,8 @@ The previous attempt in this repository grew into an enterprise search platform 
 - `src/Panel.php` renders the `[sffilters]` form and the bar above the products (mobile button, selected filters). `assets/filters.js` swaps the results and the panel, and adds the drawer, the price slider and "Load more".
 - `languages/` holds the Slovenian `.po` and the compiled `.mo`. Strings the script shows come from PHP through `sffiltersConfig.strings`.
 - `src/Settings.php` reads and writes `sffilters_settings` and builds the filters. Every way of changing settings goes through `Settings::save()`: `src/Admin/SettingsPage.php` (WooCommerce > Filters, with `assets/admin.js`), `src/Cli.php` (`wp sffilters`) and `src/Abilities.php` (Abilities API, WordPress 6.9+).
+- `src/Updater.php` offers new GitHub releases to WordPress and checks each package against its published SHA-256 checksum before it is installed.
+- `tests/checks.php` holds the checks. It runs inside a real WordPress and works out the expected products from the catalog itself. `tests/run.mjs` starts the Playground store for it and then asks the shop pages.
 
 ## Conventions
 
@@ -48,7 +50,9 @@ The previous attempt in this repository grew into an enterprise search platform 
 - `npm run playground` starts the local store at `http://127.0.0.1:9410/shop/`.
 - `npm run lint:php` checks PHP syntax.
 - `npm run i18n` compiles `languages/*.po` into `.mo`.
+- `npm test` runs the checks in WordPress Playground. A change in behaviour comes with a check in `tests/checks.php`.
+- `npm run package` builds the release ZIP and its checksum in `dist/` from the last commit.
 
 ## Git
 
-Work on the `v1` branch until 1.0 is released. Commit and push after every finished step. The repository is public: never commit credentials, server addresses or client data.
+Work on the `v1` branch until 1.0 is released. Commit and push after every finished step. A release is a `v<version>` tag on a commit whose version is the same in `package.json`, the plugin header, `SFFILTERS_VERSION` and `CHANGELOG.md`: CI checks it, builds the ZIP and publishes it. The repository is public: never commit credentials, server addresses or client data.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0
+
+- Added updates from GitHub releases. A new release shows up on the WordPress Plugins and Updates screens, with its notes under "View details". Before WordPress installs it, the package is compared with its published SHA-256 checksum.
+- Added `npm test`: checks of filtering, counts, settings and updates inside a real WordPress with WooCommerce. On GitHub they run in WordPress Playground and on MariaDB.
+- Added `npm run package` and a release job: pushing a `v<version>` tag publishes the ZIP and its checksum.
+
 ## 0.5.0
 
 - Added a display setting for taxonomy filters: checkboxes that filter the list, or links that lead to each term's own page, with a link back to all products on those pages. Set it on the settings page, with `wp sffilters display` or through the abilities.

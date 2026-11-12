@@ -11,3 +11,4 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 delete_option( 'sffilters_settings' );
 delete_option( 'sffilters_version' );
+delete_site_transient( 'sffilters_release' );

@@ -213,3 +213,15 @@ msgstr "Potrditvena polja"
 
 msgid "Links to their own pages"
 msgstr "Povezave do lastnih strani"
+
+msgid "Product filters for the WooCommerce shop your theme already renders."
+msgstr "Filtri izdelkov za trgovino WooCommerce, ki jo tema že riše."
+
+msgid "The update was not installed, because its checksum could not be read from GitHub. Try again later."
+msgstr "Posodobitev ni nameščena, ker kontrolne vsote ni bilo mogoče prebrati z GitHuba. Poskusite znova pozneje."
+
+msgid "The update was not installed, because the downloaded file does not match its published checksum."
+msgstr "Posodobitev ni nameščena, ker se prenesena datoteka ne ujema z objavljeno kontrolno vsoto."
+
+msgid "See the release on GitHub for details."
+msgstr "Podrobnosti so v izdaji na GitHubu."

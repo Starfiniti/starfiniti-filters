@@ -1,6 +1,6 @@
 {
   "name": "starfiniti-filters",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Product filters for the WooCommerce shop your theme already renders.",
   "license": "GPL-3.0-or-later",
@@ -11,6 +11,8 @@
   "scripts": {
     "playground": "wp-playground-cli server --blueprint=playground/blueprint.json --mount-before-install=.:/wordpress/wp-content/plugins/starfiniti-filters --port=9410",
     "lint:php": "node scripts/lint-php.mjs",
+    "test": "node tests/run.mjs",
+    "package": "node scripts/package.mjs",
     "i18n": "node scripts/make-mo.mjs"
   },
   "devDependencies": {

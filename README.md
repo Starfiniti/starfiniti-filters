@@ -4,7 +4,7 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.5.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
+Version 0.6.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
 
 Working now:
 
@@ -20,8 +20,19 @@ Working now:
 - A settings page under WooCommerce > Filters, the same settings through WP-CLI and the WordPress Abilities API
 - English and Slovenian
 - Filtered pages are `noindex`
+- Updates from GitHub releases on the normal WordPress update screens
 
 Not yet: Bricks query loops, Breakdance product lists outside the shop template and the `[products]` shortcode.
+
+## Install and updates
+
+Download `starfiniti-filters-<version>.zip` from the [latest release](https://github.com/Starfiniti/starfiniti-filters/releases/latest) and upload it under **Plugins > Add New > Upload Plugin**.
+
+From then on the plugin updates like any other. WordPress shows a new release on the Plugins and Updates screens, with its notes under "View details", and auto-updates can be switched on for it. The plugin reads the public release data from GitHub at most twice a day and sends nothing about the store.
+
+Before WordPress installs a release, the plugin compares the downloaded ZIP with the SHA-256 checksum published next to it. When the two differ, or the checksum cannot be read, the update stops and the installed version stays.
+
+A store that blocks outgoing requests with `WP_HTTP_BLOCK_EXTERNAL` has to allow `api.github.com`, `github.com` and `release-assets.githubusercontent.com` in `WP_ACCESSIBLE_HOSTS`.
 
 ## Usage
 
@@ -109,6 +120,24 @@ After changing a `.po` file in `languages/`, compile it:
 ```bash
 npm run i18n
 ```
+
+### Tests
+
+```bash
+npm test
+```
+
+This starts the same store on port 9411, runs `tests/checks.php` inside it and then asks the shop pages for filtered lists the way a visitor would. The checks work out what each filter should return from the products themselves and compare it with what the plugin returns. They also cover the counts in the panel, the settings and the updates, with GitHub played by fixed answers.
+
+On GitHub the same checks run in Playground and on MariaDB, with the lowest supported and the latest WordPress and WooCommerce.
+
+### Releasing
+
+1. Set the new version in `package.json`, in the plugin header and in `SFFILTERS_VERSION`, and describe it in `CHANGELOG.md`.
+2. Commit, tag the commit `v<version>` and push the tag.
+3. GitHub Actions runs every check, builds the ZIP with its checksum and publishes the release with the changelog section as its notes.
+
+`npm run package` builds the same ZIP locally in `dist/`, from the files of the last commit.
 
 ## History
 
