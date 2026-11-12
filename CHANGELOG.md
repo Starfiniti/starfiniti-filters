@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.5.0
+
+- Added a display setting for taxonomy filters: checkboxes that filter the list, or links that lead to each term's own page, with a link back to all products on those pages. Set it on the settings page, with `wp sffilters display` or through the abilities.
+- Buttons (mobile "Filters" button, "Show products", "Load more") now have a plain style of their own where the theme styles none, as in Breakdance. A theme that styles `.button` keeps its look.
+- Confirmed with the Breakdance "Shop Page" element: filtering, selected filters, infinite scroll, the mobile drawer and add to cart after a swap.
+- Fixed a PHP warning for a filter definition without a label.
+
 ## 0.4.0
 
 - Added the settings page under WooCommerce > Filters: add, title, reorder and remove filters, and choose page links, "Load more" or infinite scroll.

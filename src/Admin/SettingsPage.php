@@ -93,14 +93,16 @@ final class SettingsPage {
 		$keys    = isset( $posted['key'] ) && is_array( $posted['key'] ) ? array_values( $posted['key'] ) : array();
 		$slugs   = isset( $posted['slug'] ) && is_array( $posted['slug'] ) ? array_values( $posted['slug'] ) : array();
 		$labels  = isset( $posted['label'] ) && is_array( $posted['label'] ) ? array_values( $posted['label'] ) : array();
+		$shown   = isset( $posted['display'] ) && is_array( $posted['display'] ) ? array_values( $posted['display'] ) : array();
 		$filters = array();
 
 		// Rows arrive in the order they are shown.
 		foreach ( $keys as $index => $key ) {
 			$filters[] = array(
-				'source' => is_string( $key ) ? sanitize_text_field( $key ) : '',
-				'slug'   => isset( $slugs[ $index ] ) && is_string( $slugs[ $index ] ) ? sanitize_key( $slugs[ $index ] ) : '',
-				'label'  => isset( $labels[ $index ] ) && is_string( $labels[ $index ] ) ? sanitize_text_field( $labels[ $index ] ) : '',
+				'source'  => is_string( $key ) ? sanitize_text_field( $key ) : '',
+				'slug'    => isset( $slugs[ $index ] ) && is_string( $slugs[ $index ] ) ? sanitize_key( $slugs[ $index ] ) : '',
+				'label'   => isset( $labels[ $index ] ) && is_string( $labels[ $index ] ) ? sanitize_text_field( $labels[ $index ] ) : '',
+				'display' => isset( $shown[ $index ] ) && is_string( $shown[ $index ] ) ? sanitize_key( $shown[ $index ] ) : '',
 			);
 		}
 
@@ -136,7 +138,7 @@ final class SettingsPage {
 		foreach ( Settings::definitions() as $definition ) {
 			$key          = Settings::key( $definition );
 			$used[ $key ] = true;
-			$rows        .= $this->row( $key, $definition['slug'], $definition['label'] ?? '', $sources[ $key ]['label'] ?? $key, ! empty( $sources[ $key ]['attribute'] ) );
+			$rows        .= $this->row( $key, $definition['slug'], $definition['label'] ?? '', $sources[ $key ]['label'] ?? $key, ! empty( $sources[ $key ]['attribute'] ), 'taxonomy' === $definition['source'], $definition['display'] ?? '' );
 		}
 
 		foreach ( $sources as $key => $source ) {
@@ -145,7 +147,7 @@ final class SettingsPage {
 				esc_attr( $key ),
 				esc_attr( $source['label'] ),
 				esc_attr( $source['slug'] ),
-				$source['attribute'] ? ' data-attribute' : '',
+				( $source['attribute'] ? ' data-attribute' : '' ) . ( 'taxonomy' === $source['source'] ? ' data-taxonomy' : '' ),
 				disabled( isset( $used[ $key ] ), true, false ),
 				/* translators: %s: attribute name, for example Color. */
 				esc_html( $source['attribute'] ? sprintf( __( '%s (attribute)', 'starfiniti-filters' ), $source['label'] ) : $source['label'] )
@@ -191,6 +193,7 @@ final class SettingsPage {
 						<tr>
 							<th scope="col"><?php esc_html_e( 'Filter', 'starfiniti-filters' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Title in the panel', 'starfiniti-filters' ); ?></th>
+							<th scope="col"><?php esc_html_e( 'Display', 'starfiniti-filters' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'URL parameter', 'starfiniti-filters' ); ?></th>
 							<th scope="col"><?php esc_html_e( 'Order', 'starfiniti-filters' ); ?></th>
 						</tr>
@@ -198,12 +201,12 @@ final class SettingsPage {
 					<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in row(). ?>
 					<tbody class="sffilters-admin__rows" data-sffilters-rows><?php echo $rows; ?></tbody>
 					<tbody class="sffilters-admin__empty">
-						<tr><td colspan="4"><?php esc_html_e( 'No filters yet. Add one below.', 'starfiniti-filters' ); ?></td></tr>
+						<tr><td colspan="5"><?php esc_html_e( 'No filters yet. Add one below.', 'starfiniti-filters' ); ?></td></tr>
 					</tbody>
 				</table>
 
 				<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in row(). ?>
-				<template data-sffilters-template><?php echo $this->row( '', '', '', '%s', false ); ?></template>
+				<template data-sffilters-template><?php echo $this->row( '', '', '', '%s', false, true, '' ); ?></template>
 
 				<p class="sffilters-admin__add">
 					<label for="sffilters-add"><?php esc_html_e( 'Add a filter', 'starfiniti-filters' ); ?></label>
@@ -247,13 +250,29 @@ final class SettingsPage {
 	 * @param string $label     Title set by the store, empty for the default.
 	 * @param string $name      Default title of the source.
 	 * @param bool   $attribute Whether the source is a product attribute.
+	 * @param bool   $taxonomy  Whether the source is a taxonomy. Only those can be shown as links.
+	 * @param string $display   `links` when the terms lead to their own pages.
 	 */
-	private function row( string $key, string $slug, string $label, string $name, bool $attribute ): string {
+	private function row( string $key, string $slug, string $label, string $name, bool $attribute, bool $taxonomy, string $display ): string {
+		$shown = '<input type="hidden" name="sffilters[display][]" value="">';
+
+		if ( $taxonomy ) {
+			$shown = sprintf(
+				'<select name="sffilters[display][]" aria-label="%1$s" data-sffilters-display><option value="">%2$s</option><option value="links"%3$s>%4$s</option></select>',
+				/* translators: %s: filter name, for example Categories. */
+				esc_attr( sprintf( __( 'Display of the %s filter', 'starfiniti-filters' ), $name ) ),
+				esc_html__( 'Checkboxes', 'starfiniti-filters' ),
+				selected( $display, 'links', false ),
+				esc_html__( 'Links to their own pages', 'starfiniti-filters' )
+			);
+		}
+
 		return sprintf(
 			'<tr data-sffilters-row>'
 			. '<td><strong data-sffilters-name>%1$s</strong> <span class="description" data-sffilters-note%11$s>%10$s</span>'
 			. '<input type="hidden" name="sffilters[key][]" value="%2$s" data-sffilters-key><input type="hidden" name="sffilters[slug][]" value="%3$s"></td>'
 			. '<td><input type="text" class="regular-text" name="sffilters[label][]" value="%4$s" placeholder="%1$s" aria-label="%5$s" data-sffilters-label></td>'
+			. '<td>%13$s</td>'
 			. '<td><code data-sffilters-param>%6$s</code></td>'
 			. '<td class="sffilters-admin__actions">'
 			. '<button type="button" class="button button-small" data-sffilters-move="-1" aria-label="%7$s">&uarr;</button> '
@@ -275,7 +294,8 @@ final class SettingsPage {
 			esc_attr( sprintf( __( 'Remove %s', 'starfiniti-filters' ), $name ) ),
 			esc_html__( 'Attribute', 'starfiniti-filters' ),
 			$attribute ? '' : ' hidden',
-			esc_html__( 'Remove', 'starfiniti-filters' )
+			esc_html__( 'Remove', 'starfiniti-filters' ),
+			$shown // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above.
 		);
 	}
 }

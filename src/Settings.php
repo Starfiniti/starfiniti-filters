@@ -24,7 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The settings page, WP-CLI and the abilities all go through this class.
  *
  * A stored filter definition is an array: `slug` (used in the URL as `sf_<slug>`), `source`
- * (`taxonomy`, `price`, `stock` or `sale`), `taxonomy` for taxonomy filters and an optional `label`.
+ * (`taxonomy`, `price`, `stock` or `sale`), `taxonomy` for taxonomy filters, an optional `label` and,
+ * for taxonomy filters, `display` set to `links` when the terms lead to their own pages.
  * When reading input, `source` may also name the taxonomy directly, for example `pa_color`.
  */
 final class Settings {
@@ -198,6 +199,7 @@ final class Settings {
 				'source'        => $key,
 				'label'         => $definition['label'] ?? '',
 				'default_label' => self::default_label( $definition['source'], $definition['taxonomy'] ?? '' ),
+				'display'       => 'taxonomy' === $definition['source'] ? ( $definition['display'] ?? 'checkboxes' ) : '',
 				'param'         => 'sf_' . $definition['slug'],
 			);
 		}
@@ -328,8 +330,8 @@ final class Settings {
 	 * @return array|WP_Error
 	 */
 	private static function normalize( array $definition ) {
-		$source   = is_scalar( $definition['source'] ?? '' ) ? (string) $definition['source'] : '';
-		$taxonomy = is_scalar( $definition['taxonomy'] ?? '' ) ? (string) $definition['taxonomy'] : '';
+		$source   = self::text( $definition, 'source' );
+		$taxonomy = self::text( $definition, 'taxonomy' );
 
 		// A taxonomy may be named directly, for example `pa_color`.
 		if ( 'taxonomy' !== $source && ! in_array( $source, self::SOURCES, true ) ) {
@@ -342,8 +344,8 @@ final class Settings {
 			return new WP_Error( 'sffilters_unknown_source', sprintf( __( '"%s" is not a filter source.', 'starfiniti-filters' ), $taxonomy ), array( 'status' => 400 ) );
 		}
 
-		$slug  = sanitize_key( is_scalar( $definition['slug'] ?? '' ) ? (string) $definition['slug'] : '' );
-		$label = trim( wp_strip_all_tags( is_scalar( $definition['label'] ?? '' ) ? (string) $definition['label'] : '' ) );
+		$slug  = sanitize_key( self::text( $definition, 'slug' ) );
+		$label = trim( wp_strip_all_tags( self::text( $definition, 'label' ) ) );
 		$clean = array(
 			'slug'   => '' !== $slug ? $slug : self::default_slug( $source, $taxonomy ),
 			'source' => $source,
@@ -351,6 +353,10 @@ final class Settings {
 
 		if ( 'taxonomy' === $source ) {
 			$clean['taxonomy'] = $taxonomy;
+
+			if ( 'links' === self::text( $definition, 'display' ) ) {
+				$clean['display'] = 'links';
+			}
 		}
 
 		if ( '' !== $label ) {
@@ -358,6 +364,15 @@ final class Settings {
 		}
 
 		return $clean;
+	}
+
+	/**
+	 * Returns one value of a definition as text. A missing or non-scalar value is an empty string.
+	 */
+	private static function text( array $definition, string $key ): string {
+		$value = $definition[ $key ] ?? '';
+
+		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 	/**
@@ -437,7 +452,7 @@ final class Settings {
 
 		switch ( $definition['source'] ) {
 			case 'taxonomy':
-				return new TaxonomyFilter( $slug, $label, $taxonomy );
+				return new TaxonomyFilter( $slug, $label, $taxonomy, isset( $definition['display'] ) );
 
 			case 'price':
 				return new PriceFilter( $slug, $label );

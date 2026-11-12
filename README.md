@@ -4,7 +4,7 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.4.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
+Version 0.5.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
 
 Working now:
 
@@ -15,17 +15,21 @@ Working now:
 - Mobile panel: a "Filters" button opens the panel as a drawer on screens up to 768px
 - Price slider with two handles
 - Page links, "Load more" or infinite scroll
+- Categories (or any taxonomy) as checkboxes that filter the list, or as links to their own pages
+- Works with the Breakdance "Shop Page" element
 - A settings page under WooCommerce > Filters, the same settings through WP-CLI and the WordPress Abilities API
 - English and Slovenian
 - Filtered pages are `noindex`
 
-Not yet: page builder product lists (Breakdance, Bricks) and the `[products]` shortcode.
+Not yet: Bricks query loops, Breakdance product lists outside the shop template and the `[products]` shortcode.
 
 ## Usage
 
 Put the `[sffilters]` shortcode where the panel should appear, for example in a sidebar widget or a page builder template of the shop page.
 
 Choose the filters under **WooCommerce > Filters**: add a filter for any category, brand, tag or attribute, or for price, availability and sale, set its title and order, and pick how the product list continues (page links, "Load more" or infinite scroll). Until you save, the panel shows categories, brands, price, availability and on sale.
+
+A taxonomy filter shows its terms in one of two ways. **Checkboxes** filter the current list and keep the choice in the URL. **Links to their own pages** turn every term into a link to its archive, for example the category page, with a link back to all products. Use links when the category pages should stay the pages people and search engines land on.
 
 ### WP-CLI
 
@@ -35,6 +39,7 @@ wp sffilters sources
 wp sffilters add pa_color --label="Colour" --position=2
 wp sffilters move price 1
 wp sffilters label cat "Product type"
+wp sffilters display cat links
 wp sffilters remove sale
 wp sffilters pagination more
 wp sffilters reset --yes

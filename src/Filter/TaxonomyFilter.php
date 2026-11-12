@@ -7,24 +7,35 @@
 
 namespace Starfiniti\Filters\Filter;
 
+use Starfiniti\Filters\Plugin;
+use Starfiniti\Filters\Query;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
  * Covers categories, tags, brands and product attributes.
+ *
+ * Shown as checkboxes, the terms filter the current list. Shown as links, each term leads to its own page,
+ * for example the category page, and nothing is read from the URL.
  */
 final class TaxonomyFilter extends Filter {
 
 	public function __construct(
 		string $slug,
 		string $label,
-		private string $taxonomy
+		private string $taxonomy,
+		private bool $links = false
 	) {
 		parent::__construct( $slug, $label );
 	}
 
 	public function parse( $raw ): array {
+		if ( $this->links ) {
+			return array();
+		}
+
 		$slugs = array_filter( array_map( 'sanitize_title', self::split( $raw ) ) );
 
 		return array_values( array_unique( $slugs ) );
@@ -42,6 +53,10 @@ final class TaxonomyFilter extends Filter {
 	}
 
 	public function facet( string $ids_sql, array $values ): array {
+		if ( $this->links ) {
+			return $this->links();
+		}
+
 		$hierarchical = is_taxonomy_hierarchical( $this->taxonomy );
 		$root         = is_tax( $this->taxonomy ) ? (int) get_queried_object_id() : 0;
 
@@ -70,6 +85,55 @@ final class TaxonomyFilter extends Filter {
 		return array(
 			'kind'    => 'options',
 			'options' => self::tree( $nodes, 0 ),
+		);
+	}
+
+	/**
+	 * Lists every term with products as a link to its own page.
+	 *
+	 * The counts cover the whole catalog, because the link leaves the current list.
+	 */
+	private function links(): array {
+		$base = Plugin::instance()->base_query_vars();
+
+		if ( null === $base ) {
+			return array();
+		}
+
+		$object  = get_taxonomy( $this->taxonomy );
+		$current = is_tax( $this->taxonomy ) ? (int) get_queried_object_id() : 0;
+
+		// On a term page, count without that term, so every link shows what its own page lists.
+		unset( $base[ $object && $object->query_var ? $object->query_var : $this->taxonomy ], $base['taxonomy'], $base['term'], $base['term_id'] );
+
+		$counts = $this->counts( Query::ids_sql( $base ), is_taxonomy_hierarchical( $this->taxonomy ) );
+		$nodes  = array();
+
+		foreach ( $this->terms( array_keys( $counts ), array(), 0 ) as $term ) {
+			$url = get_term_link( $term );
+
+			if ( is_wp_error( $url ) ) {
+				continue;
+			}
+
+			$nodes[ $term->term_id ] = array(
+				'label'   => $term->name,
+				'count'   => $counts[ $term->term_id ] ?? 0,
+				'url'     => $url,
+				'current' => $term->term_id === $current,
+				'parent'  => (int) $term->parent,
+			);
+		}
+
+		if ( array() === $nodes ) {
+			return array();
+		}
+
+		return array(
+			'kind'    => 'links',
+			'options' => self::tree( $nodes, 0 ),
+			// On a term page, the way back to the whole shop.
+			'all'     => 0 !== $current ? (string) wc_get_page_permalink( 'shop' ) : '',
 		);
 	}
 

@@ -30,8 +30,8 @@
 }
 
 @media ( max-width: 782px ) {
-	.sffilters-admin__table th:nth-child( 3 ),
-	.sffilters-admin__table td:nth-child( 3 ) {
+	.sffilters-admin__table th:nth-child( 4 ),
+	.sffilters-admin__table td:nth-child( 4 ) {
 		display: none;
 	}
 }

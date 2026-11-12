@@ -48,6 +48,25 @@
 	margin: 0;
 }
 
+.sffilters-option__link {
+	color: inherit;
+	text-decoration: none;
+}
+
+.sffilters-option__link:hover .sffilters-option__label,
+.sffilters-option__link:focus-visible .sffilters-option__label {
+	text-decoration: underline;
+}
+
+.sffilters-option__link[aria-current="page"] .sffilters-option__label {
+	font-weight: 700;
+}
+
+.sffilters-filter__all {
+	font-size: 0.875em;
+	margin: 0 0 0.5rem;
+}
+
 .sffilters-option__label {
 	flex: 1;
 	min-width: 0;
@@ -166,6 +185,32 @@
 .sffilters-slider input:focus-visible::-moz-range-thumb {
 	outline: 2px solid currentColor;
 	outline-offset: 2px;
+}
+
+/*
+ * Buttons. A theme that styles `.button` keeps its own look: these rules carry no weight (`:where`),
+ * so they only show where the theme has no button style, as in Breakdance or Bricks.
+ */
+
+:where(.sffilters-toggle, .sffilters-drawer__show, .sffilters-more__button, .sffilters-apply) {
+	appearance: none;
+	background: transparent;
+	border: 1px solid currentColor;
+	border-radius: var(--sffilters-radius, 4px);
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	line-height: 1.2;
+	min-height: 2.75rem;
+	padding: 0.6em 1.1em;
+	text-decoration: none;
+}
+
+:where(.sffilters-drawer__show) {
+	background: var(--sffilters-accent, var(--bde-brand-primary-color, #1a1a1a));
+	border-color: transparent;
+	color: var(--sffilters-accent-text, #fff);
 }
 
 /* Bar above the products: the button for small screens and the selected filters. */
@@ -291,13 +336,20 @@
 }
 
 .sffilters-drawer__close {
+	align-items: center;
 	background: none;
 	border: 0;
+	border-radius: var(--sffilters-radius, 4px);
 	color: inherit;
 	cursor: pointer;
+	display: inline-flex;
 	font-size: 1.75rem;
+	height: 2.75rem;
+	justify-content: center;
 	line-height: 1;
-	padding: 0.25rem 0.5rem;
+	margin: -0.5rem -0.5rem -0.5rem 0;
+	padding: 0;
+	width: 2.75rem;
 }
 
 .sffilters-drawer__show {

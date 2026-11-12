@@ -38,15 +38,20 @@ final class Abilities {
 		$filter = array(
 			'type'       => 'object',
 			'properties' => array(
-				'source' => array(
+				'source'  => array(
 					'type'        => 'string',
 					'description' => 'What the filter is built from: a product taxonomy such as product_cat, product_brand, product_tag or pa_color, or price, stock or sale. get-settings lists them in available_sources.',
 				),
-				'label'  => array(
+				'label'   => array(
 					'type'        => 'string',
 					'description' => 'Title in the panel. Empty for the default title.',
 				),
-				'slug'   => array(
+				'display' => array(
+					'type'        => 'string',
+					'enum'        => array( 'checkboxes', 'links', '' ),
+					'description' => 'For taxonomies. checkboxes filters the current list. links makes each term a link to its own page, for example the category page.',
+				),
+				'slug'    => array(
 					'type'        => 'string',
 					'description' => 'Used in the URL as sf_<slug>. Keep the slug of an existing filter. Empty for the default.',
 				),

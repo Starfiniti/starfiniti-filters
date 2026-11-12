@@ -38,6 +38,18 @@
 		row.querySelector( '[data-sffilters-param]' ).textContent = 'sf_' + chosen.dataset.slug;
 		label.placeholder = name;
 
+		// Only taxonomies can be shown as links, the others keep an empty value in the same place.
+		const display = row.querySelector( '[data-sffilters-display]' );
+
+		if ( display && ! ( 'taxonomy' in chosen.dataset ) ) {
+			const hidden = document.createElement( 'input' );
+
+			hidden.type = 'hidden';
+			hidden.name = display.name;
+			hidden.value = '';
+			display.replaceWith( hidden );
+		}
+
 		row.querySelectorAll( '[aria-label]' ).forEach( function ( item ) {
 			item.setAttribute( 'aria-label', item.getAttribute( 'aria-label' ).replace( '%s', name ) );
 		} );

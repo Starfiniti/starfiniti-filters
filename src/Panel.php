@@ -254,6 +254,12 @@ final class Panel {
 
 		if ( 'options' === $kind ) {
 			$body = $this->options( $param . '[]', $facet['options'] );
+		} elseif ( 'links' === $kind ) {
+			$body = $this->links( $facet['options'] );
+
+			if ( '' !== $facet['all'] ) {
+				$body = sprintf( '<p class="sffilters-filter__all"><a href="%s">%s</a></p>', esc_url( $facet['all'] ), esc_html__( 'All products', 'starfiniti-filters' ) ) . $body;
+			}
 		} elseif ( 'range' === $kind ) {
 			$body = $this->range( $param, $facet );
 		} else {
@@ -281,6 +287,26 @@ final class Panel {
 				'<li class="sffilters-option">%s%s</li>',
 				$this->checkbox( $name, (string) $option['value'], (string) $option['label'], (int) $option['count'], (bool) $option['selected'] ),
 				empty( $option['children'] ) ? '' : $this->options( $name, $option['children'] )
+			);
+		}
+
+		return '<ul class="sffilters-options">' . $items . '</ul>';
+	}
+
+	/**
+	 * Renders a list of links, nested for child options. The link of the page being viewed is marked.
+	 */
+	private function links( array $options ): string {
+		$items = '';
+
+		foreach ( $options as $option ) {
+			$items .= sprintf(
+				'<li class="sffilters-option"><a class="sffilters-option__control sffilters-option__link" href="%1$s"%2$s><span class="sffilters-option__label">%3$s</span> <span class="sffilters-option__count">%4$s</span></a>%5$s</li>',
+				esc_url( (string) $option['url'] ),
+				$option['current'] ? ' aria-current="page"' : '',
+				esc_html( (string) $option['label'] ),
+				esc_html( number_format_i18n( (int) $option['count'] ) ),
+				empty( $option['children'] ) ? '' : $this->links( $option['children'] )
 			);
 		}
 

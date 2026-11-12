@@ -60,11 +60,12 @@ final class Cli {
 				'slug'     => $filter['slug'],
 				'source'   => $filter['source'],
 				'label'    => '' !== $filter['label'] ? $filter['label'] : $filter['default_label'],
+				'display'  => $filter['display'],
 				'param'    => $filter['param'],
 			);
 		}
 
-		Utils\format_items( $assoc_args['format'] ?? 'table', $rows, array( 'position', 'slug', 'source', 'label', 'param' ) );
+		Utils\format_items( $assoc_args['format'] ?? 'table', $rows, array( 'position', 'slug', 'source', 'label', 'display', 'param' ) );
 	}
 
 	/**
@@ -114,6 +115,15 @@ final class Cli {
 	 * [--slug=<slug>]
 	 * : Used in the URL as sf_<slug>. Defaults to a short form of the source.
 	 *
+	 * [--display=<display>]
+	 * : For taxonomies. With `links` each term leads to its own page, for example the category page.
+	 * ---
+	 * default: checkboxes
+	 * options:
+	 *   - checkboxes
+	 *   - links
+	 * ---
+	 *
 	 * [--position=<position>]
 	 * : Place in the panel, starting at 1. Defaults to the end.
 	 *
@@ -128,9 +138,10 @@ final class Cli {
 	public function add( array $args, array $assoc_args ): void {
 		$filters = Settings::definitions();
 		$new     = array(
-			'source' => $args[0],
-			'label'  => (string) ( $assoc_args['label'] ?? '' ),
-			'slug'   => (string) ( $assoc_args['slug'] ?? '' ),
+			'source'  => $args[0],
+			'label'   => (string) ( $assoc_args['label'] ?? '' ),
+			'slug'    => (string) ( $assoc_args['slug'] ?? '' ),
+			'display' => (string) ( $assoc_args['display'] ?? '' ),
 		);
 		$place   = isset( $assoc_args['position'] ) ? max( 1, (int) $assoc_args['position'] ) : count( $filters ) + 1;
 
@@ -209,6 +220,38 @@ final class Cli {
 
 		$this->save( array( 'filters' => $filters ) );
 		WP_CLI::success( sprintf( 'Updated the title of the filter "%s".', $args[0] ) );
+	}
+
+	/**
+	 * Sets how a taxonomy filter shows its terms.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : Slug of the filter, see `wp sffilters list`.
+	 *
+	 * <display>
+	 * : With `links` each term leads to its own page, for example the category page.
+	 * ---
+	 * options:
+	 *   - checkboxes
+	 *   - links
+	 * ---
+	 *
+	 * @param array $args Positional arguments.
+	 */
+	public function display( array $args ): void {
+		$filters = Settings::definitions();
+		$index   = $this->find( $filters, $args[0] );
+
+		if ( 'taxonomy' !== $filters[ $index ]['source'] ) {
+			WP_CLI::error( 'Only taxonomy filters can be shown as links.' );
+		}
+
+		$filters[ $index ]['display'] = $args[1];
+
+		$this->save( array( 'filters' => $filters ) );
+		WP_CLI::success( sprintf( 'The filter "%s" now shows its terms as %s.', $args[0], $args[1] ) );
 	}
 
 	/**

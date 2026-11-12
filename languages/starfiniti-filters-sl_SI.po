@@ -197,3 +197,19 @@ msgstr "Filter »%s« je naveden dvakrat."
 #. translators: %s: what was given as the filter source.
 msgid "\"%s\" is not a filter source."
 msgstr "»%s« ni vir filtra."
+
+msgid "All products"
+msgstr "Vsi izdelki"
+
+msgid "Display"
+msgstr "Prikaz"
+
+#. translators: %s: filter name, for example Categories.
+msgid "Display of the %s filter"
+msgstr "Prikaz filtra %s"
+
+msgid "Checkboxes"
+msgstr "Potrditvena polja"
+
+msgid "Links to their own pages"
+msgstr "Povezave do lastnih strani"
