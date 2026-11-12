@@ -4,7 +4,7 @@ Product filters for the WooCommerce shop your theme already renders. The plugin 
 
 ## Status
 
-Version 0.6.0 filters the WooCommerce shop, category, tag and brand pages. Version 1.0 is in development on the `v1` branch.
+Version 1.0.0 filters the WooCommerce shop, category, tag and brand pages.
 
 Working now:
 
@@ -22,7 +22,7 @@ Working now:
 - Filtered pages are `noindex`
 - Updates from GitHub releases on the normal WordPress update screens
 
-Not yet: Bricks query loops, Breakdance product lists outside the shop template and the `[products]` shortcode.
+Not yet: radio buttons and select as filter controls, a canonical link on filtered pages, Bricks query loops, Breakdance product lists outside the shop template and the `[products]` shortcode.
 
 ## Install and updates
 
@@ -84,17 +84,9 @@ add_filter( 'sffilters_pagination', static fn() => 'more' );
 3. Counts next to each value come from WordPress and WooCommerce tables. There is no separate index to sync.
 4. A small script loads the new URL in the background and swaps the products, result count, pagination and filter panel. Without JavaScript the panel is a normal form.
 
-## Planned for 1.0
+## Out of scope
 
-- Sources: categories, tags, brands, attributes, price, stock status, on sale
-- Controls: checkboxes, radio buttons, select, price range, category tree
-- Sidebar and mobile panel, selected filters with remove, clear all
-- Pagination, load more and infinite scroll
-- One settings page under WooCommerce, the same settings through WP-CLI and the WordPress Abilities API
-- English and Slovenian
-- Filtered pages are `noindex` with a canonical link to the unfiltered page
-
-Not in 1.0: external search engines, search and autocomplete, SEO landing pages for filter combinations, per-variation stock filtering.
+External search engines, search and autocomplete, SEO landing pages for filter combinations and per-variation stock filtering.
 
 ## Requirements
 

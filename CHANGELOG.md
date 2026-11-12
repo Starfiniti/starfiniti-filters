@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.0.0
+
+- First stable release. The code is the same as in 0.6.0.
+- Not part of 1.0.0: radio buttons and select as filter controls, a canonical link on filtered pages, Bricks query loops, Breakdance product lists outside the shop template and the `[products]` shortcode.
+
 ## 0.6.0
 
 - Added updates from GitHub releases. A new release shows up on the WordPress Plugins and Updates screens, with its notes under "View details". Before WordPress installs it, the package is compared with its published SHA-256 checksum.

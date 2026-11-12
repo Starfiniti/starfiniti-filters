@@ -55,4 +55,4 @@ The previous attempt in this repository grew into an enterprise search platform 
 
 ## Git
 
-Work on the `v1` branch until 1.0 is released. Commit and push after every finished step. A release is a `v<version>` tag on a commit whose version is the same in `package.json`, the plugin header, `SFFILTERS_VERSION` and `CHANGELOG.md`: CI checks it, builds the ZIP and publishes it. The repository is public: never commit credentials, server addresses or client data.
+Work on the `v1` branch. Commit and push after every finished step. A release is a `v<version>` tag on a commit whose version is the same in `package.json`, the plugin header, `SFFILTERS_VERSION` and `CHANGELOG.md`: CI checks it, builds the ZIP and publishes it. The repository is public: never commit credentials, server addresses or client data.
